@@ -42,8 +42,18 @@ def main() -> int:
     a = ap.parse_args()
     from datasets import load_dataset
 
-    # Only the train split is read. The Makora test split has a different schema and fails to load with it.
-    split, ds = "train", load_dataset(NAMES[a.corpus], split="train")
+    # Only the train files are read. The Makora test split has extra columns, and the
+    # default builder prepares every split, so it fails even when one split is requested.
+    from huggingface_hub import list_repo_files
+
+    files = [f for f in list_repo_files(NAMES[a.corpus], repo_type="dataset")
+             if "train" in f.lower() and f.endswith((".parquet", ".jsonl", ".json", ".csv"))]
+    print(f"train files: {len(files)}", files[:3])
+    if files:
+        ds = load_dataset(NAMES[a.corpus], data_files={"train": files}, split="train")
+    else:
+        ds = load_dataset(NAMES[a.corpus], split="train")
+    split = "train"
     n = len(ds)
     print(f"{NAMES[a.corpus]} split {split}: {n} rows, columns {ds.column_names}")
     first = ds[0]

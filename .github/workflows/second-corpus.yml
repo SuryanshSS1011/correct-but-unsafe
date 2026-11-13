@@ -28,6 +28,7 @@ jobs:
           python-version: "3.12"
       - run: pip install datasets
       - name: Lint and sample
+        shell: bash
         run: python tools/sample_corpus.py --corpus "${{ inputs.corpus || 'makora' }}" --n "${{ inputs.n || '1500' }}" --out-dir data/corpus2 | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
