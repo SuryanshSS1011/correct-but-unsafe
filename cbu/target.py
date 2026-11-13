@@ -203,6 +203,23 @@ def _count_kernel_launches() -> dict:
     return counter
 
 
+def _count_compiled_launches(counter: dict) -> None:
+    """Count launches of compiled kernels, for runs on a real GPU."""
+    try:
+        from triton.runtime.jit import JITFunction
+
+        orig = JITFunction.run
+
+        def run(self, *args, **kwargs):
+            if not kwargs.get("warmup"):
+                counter["n"] = (counter.get("n") or 0) + 1
+            return orig(self, *args, **kwargs)
+
+        JITFunction.run = run
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _expose_atomics() -> dict:
     """Route the addresses of atomic operations through a masked load before the operation runs.
 
@@ -401,6 +418,10 @@ def _run_replay(a, res: dict) -> None:
     if a.model_mode == "eval":
         ref_model.eval()
         cand_model.eval()
+    on_gpu = bool(torch.cuda.is_available())
+    if on_gpu:
+        # A no-op under the CPU shim. On a real GPU this is what KernelGYM does.
+        ref_model, cand_model = ref_model.cuda(), cand_model.cuda()
     torch.manual_seed(42)
     seeds = [int(torch.randint(0, 2**32 - 1, (1,)).item()) for _ in range(a.replay)]
     launches = _STATE.get("launches") or {}
@@ -411,6 +432,8 @@ def _run_replay(a, res: dict) -> None:
         for seed in seeds:
             torch.manual_seed(seed)
             inputs = list(ref.get_inputs())
+            if on_gpu:
+                inputs = [x.cuda() if isinstance(x, torch.Tensor) else x for x in inputs]
             torch.manual_seed(seed)
             before = launches.get("n") or 0
             output = ref_model(*inputs)
@@ -435,6 +458,18 @@ def _run_replay(a, res: dict) -> None:
                 pc = poison.count(c)
                 trial.update({"elements": pc["elements"], "unwritten": pc["unwritten"], "nan": pc["nan"]})
     res["input_shapes"] = [[str(x.dtype), list(x.shape)] if isinstance(x, torch.Tensor) else type(x).__name__ for x in inputs]
+    # Which config did each autotuned kernel settle on? On a GPU this is the real timing winner.
+    tuned = []
+    for name, obj in vars(cand).items():
+        configs, best = getattr(obj, "configs", None), getattr(obj, "best_config", None)
+        if not isinstance(configs, list) or len(configs) < 2:
+            continue
+        idx = next((i for i, c in enumerate(configs) if c is best or str(c) == str(best)), None)
+        timings = getattr(obj, "configs_timings", None)
+        tuned.append({"kernel": name, "n_configs": len(configs), "winner_index": idx, "winner": str(best)[:200],
+                      "timings": {str(k)[:120]: v for k, v in timings.items()} if isinstance(timings, dict) else None})
+    res["replay"]["autotuned"] = tuned
+    res["replay"]["device"] = torch.cuda.get_device_name(0) if on_gpu and not res.get("cpu_shim") else "cpu-interpreter"
 
 
 def _vary_batch(inputs: list, variant: str) -> list:
@@ -677,6 +712,8 @@ def main() -> int:
             poison.install()
             res["poison"] = {}
         launches = _count_kernel_launches()
+        if os.environ.get("TRITON_INTERPRET") != "1":
+            _count_compiled_launches(launches)
         _STATE["launches"] = launches
         bounds = _bounds_oracle()
         atomics = _expose_atomics()
