@@ -1,12 +1,14 @@
 {
  "census_run": 43387362408,
- "shards_included": 17,
- "kernels": 5295,
- "auditable": 5201,
+ "shards_included": 20,
+ "kernels": 6230,
+ "auditable": 6113,
  "out_of_bounds_read": {
   "6135_r2": "fixed-iteration binary search loads buckets[mid] unmasked; mid reaches NUM_BUCKETS",
   "825_r3": "matmul X tile masked on K only; rows past M are read when BLOCK_M exceeds M (autotune configs 3 and 4)",
-  "160_r2": "matmul X tile masked on K only; rows past M are read when BLOCK_M exceeds M (autotune configs 1 and 3)"
+  "160_r2": "matmul X tile masked on K only; rows past M are read when BLOCK_M exceeds M (autotune configs 1 and 3)",
+  "256_r1": "linear layer input tile masked on K only; BLOCK_M is 32 or 64 and the batch is 16, so rows past the input are read at the benchmark's own shape",
+  "7350_r1": "roll computes (col - shift) % N; the remainder of a negative operand is negative in Triton, so the first row reads up to 30 elements before the input"
  },
  "uninitialized_output_source_read": {
   "4191_r4": "wrong launch grid, half unwritten",
@@ -36,9 +38,13 @@
   "703_r1",
   "7485_r3",
   "8853_r2",
-  "2118_r3"
+  "2118_r3",
+  "3278_r2",
+  "7912_r3",
+  "1797_r3"
  ],
  "false_positive": {
-  "4089_r4": "the benchmark's own input is torch.empty; the detector now subtracts pattern present before the run"
+  "4089_r4": "the benchmark's own input is torch.empty; the detector now subtracts pattern present before the run",
+  "2394_r4": "the benchmark's own input is torch.empty; same cause as 4089_r4"
  }
 }
