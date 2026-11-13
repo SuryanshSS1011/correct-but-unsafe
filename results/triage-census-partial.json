@@ -1,0 +1,44 @@
+{
+ "census_run": 43387362408,
+ "shards_included": 17,
+ "kernels": 5295,
+ "auditable": 5201,
+ "out_of_bounds_read": {
+  "6135_r2": "fixed-iteration binary search loads buckets[mid] unmasked; mid reaches NUM_BUCKETS",
+  "825_r3": "matmul X tile masked on K only; rows past M are read when BLOCK_M exceeds M (autotune configs 3 and 4)",
+  "160_r2": "matmul X tile masked on K only; rows past M are read when BLOCK_M exceeds M (autotune configs 1 and 3)"
+ },
+ "uninitialized_output_source_read": {
+  "4191_r4": "wrong launch grid, half unwritten",
+  "7520_r1": "store uses the tril mask, 87.1% unwritten",
+  "1918_r2": "static grid with autotuned block",
+  "7962_r1": "store uses the padding-validity mask, 1.6% unwritten",
+  "6852_r1": "store uses the padding-validity mask, 2.1% unwritten",
+  "984_r2": "static grid cdiv(n, 1024) with autotuned BLOCK_SIZE 256 and 512",
+  "2121_r2": "static grid with autotuned block",
+  "4270_r2": "static grid with autotuned block",
+  "8614_r4": "static grid with autotuned block",
+  "4163_r2": "static grid with autotuned block"
+ },
+ "uninitialized_output_pattern_only": [
+  "1586_r2",
+  "1695_r2",
+  "1915_r3",
+  "228_r2",
+  "2487_r3",
+  "3008_r2",
+  "3828_r2",
+  "4314_r4",
+  "5239_r2",
+  "5338_r2",
+  "6897_r4",
+  "6993_r1",
+  "703_r1",
+  "7485_r3",
+  "8853_r2",
+  "2118_r3"
+ ],
+ "false_positive": {
+  "4089_r4": "the benchmark's own input is torch.empty; the detector now subtracts pattern present before the run"
+ }
+}

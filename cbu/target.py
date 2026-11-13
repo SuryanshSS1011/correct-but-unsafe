@@ -439,6 +439,11 @@ def _run_kernelbench(a, res: dict) -> None:
     res["input_shapes"] = [[str(x.dtype), list(x.shape)] if isinstance(x, torch.Tensor) else type(x).__name__ for x in inputs]
 
     res["inputs_before"] = _digest([x for x in inputs if isinstance(x, torch.Tensor)])
+    if "poison" in res:
+        from cbu import poison
+
+        # A benchmark input that is itself torch.empty carries the pattern before any kernel runs.
+        res["poison"]["inputs_before"] = poison.count(inputs)
     res["status"] = "importing"
     torch.manual_seed(a.seed)
     cand = _load_module(a.file, "cbu_target_module")

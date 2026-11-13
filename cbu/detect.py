@@ -242,7 +242,11 @@ def run_poison(spec: dict, timeout: int = 600) -> dict:
     base_nan = (spec.get("baseline") or {}).get("nan")
     # A reference that itself returns poison or NaN cannot serve as the clean side of the comparison.
     ref_clean = not ref or (ref.get("unwritten", 0) == 0 and ref.get("nan", 0) == 0)
-    unwritten = int(out.get("unwritten", 0)) + int(inp.get("unwritten", 0))
+    before = p.get("inputs_before") or {}
+    # Pattern that was already in the inputs is the benchmark's doing, not the kernel's.
+    inputs_added = max(0, int(inp.get("unwritten", 0)) - int(before.get("unwritten", 0)))
+    unwritten = int(out.get("unwritten", 0)) + inputs_added
+    r["inputs_uninitialized"] = bool(before.get("unwritten", 0))
     derived_nan = max(0, int(out.get("nan", 0)) - int(base_nan or 0)) if base_nan is not None else 0
     r["unwritten"] = unwritten
     r["unwritten_fraction"] = round(out.get("unwritten", 0) / out["elements"], 6) if out.get("elements") else None
