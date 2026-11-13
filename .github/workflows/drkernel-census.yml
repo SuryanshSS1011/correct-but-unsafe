@@ -1,0 +1,78 @@
+name: drkernel-census
+
+# Audits every accepted best-round kernel in the Dr. Kernel corpus with the
+# concrete detectors only. The jobs execute corpus code, so they hold no
+# secrets and have a read-only token. Results are written after every kernel,
+# so a shard that hits its time limit still uploads what it finished.
+
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "sample size (0 for the whole population)"
+        default: "0"
+      detectors:
+        description: "comma-separated detectors"
+        default: "plain,asan,poison"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install -r requirements-cpu.txt datasets
+          python -c "import torch, triton; print(torch.__version__, triton.__version__)"
+      - name: Fetch verifier verdicts
+        run: |
+          git clone --quiet https://github.com/RishiShah99/lethe ext/lethe
+          git -C ext/lethe checkout --quiet 39db72c9964f
+      - name: Build population
+        run: python pilot/drkernel/fetch_sample.py --lethe ext/lethe --n "${{ inputs.n || '0' }}" --out data/census.jsonl
+      - name: Run detectors on shard ${{ matrix.shard }}
+        run: |
+          timeout --signal=INT 330m python pilot/drkernel/run_pilot.py --data data/census.jsonl --shard ${{ matrix.shard }}/20 \
+            --detectors "${{ inputs.detectors || 'plain,asan,poison' }}" --variants native \
+            --max-configs 4 --const-variants 0 --timeout 240 --budget 300 \
+            --out results/raw/census_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: census-shard-${{ matrix.shard }}
+          path: |
+            results/raw/
+            data/population_stats.json
+          retention-days: 60
+
+  summarize:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: census-shard-*
+          path: shards
+      - name: Summarize
+        run: |
+          python pilot/drkernel/summarize.py "shards/**/census_shard*.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: census-summary
+          path: pilot_summary.json
+          retention-days: 60
