@@ -1,0 +1,6 @@
+# CPU-only audit environment. Install torch from the PyTorch CPU index first:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+# TileLens 3.1.1 requires triton>=3.8.0,<3.9, and PyTorch 2.14 pins Triton 3.8.0.
+triton==3.8.0
+tilelens==3.1.1
+numpy

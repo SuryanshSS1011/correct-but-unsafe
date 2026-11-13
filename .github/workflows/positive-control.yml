@@ -1,0 +1,68 @@
+name: positive-control
+
+# Runs the CPU detectors on TritonGym reference kernels before and after the
+# upstream fix for issue #1. The job executes third-party kernel code, so it
+# holds no secrets and has a read-only token.
+
+on:
+  push:
+    branches: [audit-dev]
+    paths:
+      - "cbu/**"
+      - "controls/tritongym/**"
+      - ".github/workflows/positive-control.yml"
+  workflow_dispatch:
+    inputs:
+      ops:
+        description: "'known', 'all', or a comma-separated list of ops"
+        default: "known"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: positive-control-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [pre, post]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install -r requirements-cpu.txt
+          python -c "import torch, triton; print(torch.__version__, triton.__version__)"
+          gcc --version | head -1
+      - name: Fetch TritonGym at the ${{ matrix.label }}-fix commit
+        run: |
+          git clone --quiet https://github.com/yil384/TritonGym ext/tritongym
+          git -C ext/tritongym checkout --quiet ${{ matrix.label == 'pre' && '2d2570e' || '5d64634' }}
+          git -C ext/tritongym log -1 --format='%H %ad' --date=short
+      - name: Run detectors
+        run: |
+          python controls/tritongym/run_control.py \
+            --checkout ext/tritongym --label ${{ matrix.label }} \
+            --ops "${{ inputs.ops || 'known' }}" \
+            --detectors plain,tilelens,asan,perturb \
+            --out results/raw/tritongym_${{ matrix.label }}.json
+      - name: Summarize
+        if: always()
+        run: |
+          python controls/tritongym/summarize.py results/raw/tritongym_${{ matrix.label }}.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tritongym-${{ matrix.label }}
+          path: results/raw/
+          retention-days: 30

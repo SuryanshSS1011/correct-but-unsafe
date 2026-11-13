@@ -1,0 +1,22 @@
+{
+  "source": "https://github.com/yil384/TritonGym/issues/1",
+  "pre_fix_commit": "2d2570e",
+  "fix_commit": "6998be68e66870b6022f67a75a040bdccc9112b2",
+  "post_fix_commit": "5d64634",
+  "note": "reported_by lists the tool under which the issue says each bug reproduces. The issue lists no op under both tools.",
+  "ops": {
+    "attention_forward": {"reported_by": "compute-sanitizer"},
+    "parallel_attention": {"reported_by": "compute-sanitizer"},
+    "softmax_reducev": {"reported_by": "compute-sanitizer"},
+    "token_attn_mistral": {"reported_by": "compute-sanitizer"},
+    "token_attn_reduceV": {"reported_by": "compute-sanitizer"},
+    "chunk_delta_fwd": {"reported_by": "triton-viz"},
+    "chunk_gla_simple": {"reported_by": "triton-viz"},
+    "flash_attn": {"reported_by": "triton-viz"},
+    "mixed_sparse_attention": {"reported_by": "triton-viz"},
+    "parallel_retention_attention": {"reported_by": "triton-viz"},
+    "rotary_emb_nopad": {"reported_by": "triton-viz"},
+    "token_softmax_bloom": {"reported_by": "triton-viz"},
+    "token_softmax_llama": {"reported_by": "triton-viz"}
+  }
+}
