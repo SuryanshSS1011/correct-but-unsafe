@@ -20,14 +20,14 @@ source reading only. Grade C means inference.
 | 2 | TritonGym still has seven buggy reference kernels after its fix. | Flagged by concrete detectors among 114 references that ran, and each confirmed by reading the source. | B |
 | 3 | 34 of 6,113 accepted Dr. Kernel kernels have a memory-safety defect, which is 0.56% with an interval of 0.40% to 0.78%. | Census of the whole accepted population. 29 return partly uninitialized output and 5 read out of bounds. | B |
 | 4 | Triton's autotuner hides a partial write on the first call. | The Triton documentation states that every config runs on the real arguments during tuning. A CPU replay of KernelGYM's five trials shows pass, fail, fail, fail, fail exactly when a partial config is the winner. | A |
-| 5 | Partial configs do win on real GPUs. | In KernelGYM's own records, 453 of 675 failing rounds with the fixed-grid pattern passed exactly 1 of 5 trials. The rate is 67.1%. It is 11.6% for other autotuned kernels and 2.9% for kernels without autotuning. A CPU recheck of 340 of those 453 rounds found a partial config in 315 of the 332 that ran, which is 94.9%. | A |
+| 5 | Partial configs do win on real GPUs. | In KernelGYM's own records, 453 of 675 failing rounds with the fixed-grid pattern passed exactly 1 of 5 trials. The rate is 67.1%. It is 11.6% for other autotuned kernels and 2.9% for kernels without autotuning. A CPU recheck of those 453 rounds found a partial config in 420 of the 444 that ran, which is 94.6%. | A |
 | 6 | Acceptance of such a kernel is not determined by its code. | Trajectory 8676 kept the same fixed grid and the same five configs in rounds 3 and 4. Round 3 passed 1 of 5 trials and round 4 passed 5 of 5. The CPU replay gives the same two signatures for the two possible kinds of winner. | A |
 | 7 | The fixed-grid pattern lowers acceptance. | 42.7% of 4,044 rounds with the pattern were accepted, against 66.6% of 8,119 autotuned rounds whose grid depends on the config. | A |
 | 8 | The model usually repairs the pattern after a failure. | After a 1-of-5 failure, 384 of 453 next rounds use a grid that depends on the config, and 311 of those were accepted. | A |
 | 9 | The pattern is not rewarded with speed. | Accepted rounds with the pattern have a median speedup of 0.63, against 0.60 and 0.68 for the other two groups. | A |
 | 10 | AddressSanitizer on the interpreter and an exact bounds oracle agree. | They agree on all 37 flagged cases of the positive control, on all 141 configs of the 36 flagged kernels, and on a random sample of 298 accepted kernels, where neither flags anything. | B |
 | 11 | A static rule finds the config-dependent class. | Rule L1 marks 23 of the 24 config-dependent census kernels. It also marks 281 accepted best-round kernels that the census did not flag, so it over-approximates. | B |
-| 12 | A kernel with the defect is rejected about three times in four. | Scaling the finished shards to the full lists gives about 420 rejected rounds and about 140 accepted rounds with a partial config. Partial configs are 30% to 40% of the configs in these kernels, so they win about twice as often as a uniform draw would give. | B |
+| 12 | A kernel with the defect is rejected about three times in four. | The recheck found 420 rejected rounds with a partial config. Among accepted rounds it found 136 in the 1,552 that ran so far, which scales to about 150 for the full list of 1,725. Partial configs are 30% to 40% of the configs in these kernels, so they win about twice as often as a uniform draw would give. | B |
 | 13 | The CPU detectors miss some errors that crash on a GPU. | Of the 24 rounds that recorded an illegal memory access or a device-side assert, 17 ran on CPU. The bounds oracle flagged 9 of them. Four of the misses run clean and correct on CPU. | B |
 
 ## 2. What changed in the reading of the results
@@ -41,9 +41,9 @@ source reading only. Grade C means inference.
 | # | Open question | What resolves it | Cost |
 |---|---|---|---|
 | 1 | How often does a partial config win on a given GPU, and does stale allocator memory ever make a partial write pass? | `gpu/minimal_repro.py` and `gpu/confirm.py`. | About one hour on any CUDA GPU, including a free Colab T4. |
-| 2 | How many accepted rounds of any index have at least one partial config? | 105 of the 1,272 that ran in the first 1,294 of 1,725. The remaining shards were still running. | Answered in part. |
-| 3 | Is the 1-of-5 signature really the partial-write defect? | Yes. 315 of 332 have a partial config. | Answered. |
-| 4 | Does the rate hold outside this corpus? | Two corpora were approved. The traces corpus has 207 rows, never uses autotuning and calls kernels through a wrapper function, so it was not audited. The Makora corpus has 544,028 programs in the same format as KernelBench, and a sample of 1,500 is running. | Free CI. No generation cost. |
+| 2 | How many accepted rounds of any index have at least one partial config? | 136 of the 1,552 that ran in the first 1,581 of 1,725. One shard was still running. | Answered in part. |
+| 3 | Is the 1-of-5 signature really the partial-write defect? | Yes. 420 of the 444 that ran have a partial config. | Answered. |
+| 4 | Does the rate hold outside this corpus? | Two corpora were approved. The traces corpus has 207 rows, never uses autotuning and calls kernels through a wrapper function, so it was not audited. The Makora corpus has 544,028 programs in the same format as KernelBench. In a static scan of 40,000 of them, 25.6% use autotuning and 3.2% match rule L1, against 11.3% of Dr. Kernel rounds. A dynamic audit of 1,500 sampled programs and 400 marked ones is running. | Free CI. No generation cost. |
 | 5 | How many more kernels fail at a nearby shape? | A population run with shape constants increased by one. The pilot found 2 more partial writes in 298 kernels. | Free CI, about four hours. |
 | 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 36 rechecked kernels, 3 behave differently between modes. | Low impact. No action. |
 | 7 | Why do four kernels crash on a GPU and run clean on CPU? | Run `236:3`, `481:3`, `3725:4` and `6133:2` on a GPU with `CUDA_LAUNCH_BLOCKING=1`. The cause is either a difference between the interpreter and compiled code, or a CUDA error carried over from another kernel in the same worker. | Minutes on a GPU. |
@@ -89,8 +89,8 @@ source reading only. Grade C means inference.
 
 ## 6. What the numbers that were pending decided
 
-1. **Accepted rounds with a partial config.** The rule was that a count above 50 keeps D1. The count is 105 with a quarter of the list still running, so D1 stands.
-2. **Rejected 1-of-5 rounds with a partial config.** The rule was that a share above 80% validates the signature. The share is 94.9%, so claim 5 stands.
+1. **Accepted rounds with a partial config.** The rule was that a count above 50 keeps D1. The count is 136 with one shard still running, so D1 stands.
+2. **Rejected 1-of-5 rounds with a partial config.** The rule was that a share above 80% validates the signature. The share is 94.6%, so claim 5 stands.
 3. **Sanitizer against the bounds oracle on the pilot sample.** The rule was that any kernel flagged by the oracle alone triggers a second census. There is none among 298 kernels, so the census numbers stand. A population run with the oracle at nearby shapes is running for a different reason, which is open question 5.
 
 ## 7. Order of work for the next two weeks

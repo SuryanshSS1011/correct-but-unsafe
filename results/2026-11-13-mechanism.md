@@ -135,16 +135,16 @@ kernels neither the sanitizer nor the oracle flagged anything, so they agree.
 ## 8. The 1-of-5 signature, checked dynamically
 
 Runs 43475957047 and 43475965294 audited every autotune config of the rounds
-that the lint marks. The numbers below cover the shards that had finished,
-which are 340 of 453 rejected rounds and 1,294 of 1,725 accepted rounds.
+that the lint marks. The rejected list is complete. The accepted list covers
+the 11 of 12 shards that had finished, which is 1,581 of 1,725 rounds.
 
 | Group | Ran on CPU | At least one partial config | Partial under every config | Partial configs in the config-dependent kernels |
 |---|---|---|---|---|
-| Rejected with exactly 1 of 5 trials passed | 332 of 340 | 315, 94.9% | 2 | 596 of 1,490 |
-| Accepted | 1,272 of 1,294 | 105, 8.3% | 3 | 154 of 503 |
+| Rejected with exactly 1 of 5 trials passed | 444 of 453 | 420, 94.6% | 2 | 823 of 2,030 |
+| Accepted | 1,552 of 1,581 | 136, 8.8% | 3 | 194 of 655 |
 
-Scaled to the full lists, about 420 rejected rounds and about 140 accepted
-rounds carry a partial config. A kernel with the defect was therefore rejected
+The rejected list has 420 rounds with a partial config. Scaled to the full
+list, about 150 accepted rounds carry one. A kernel with the defect was therefore rejected
 about three times in four. Partial configs are 30% to 40% of the configs, so
 they win about twice as often as a uniform draw would give, which fits a
 smaller block being faster.
@@ -175,11 +175,11 @@ kernels is a lower bound.
 
 1. Run 43475920247 finished. On 298 random accepted kernels neither the sanitizer nor the bounds oracle flags anything, so they agree.
 2. The traces corpus has 207 rows. None uses autotuning, and its kernels are called through a wrapper function with explicit weights, which the harness does not support. It was not audited.
-3. The Makora corpus is being audited in run 43509607962.
+3. The Makora corpus has 544,028 programs. A static scan of 40,000 of them found `triton.autotune` in 10,229, which is 25.6%, and rule L1 in 1,263, which is 3.2% with an interval of 3.0% to 3.3%. The same rule marks 11.3% of Dr. Kernel rounds. Run 43511475144 audits 1,500 sampled programs and 400 marked ones. Two earlier runs failed on a schema difference between the train and test files.
 
 ## 11. Still running
 
-1. The last shards of runs 43475965294 and 43475957047.
+1. The last shard of run 43475965294.
 2. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected.
 3. Run 43498607851 audits the whole accepted population at the benchmark's shape and at three nearby shapes.
-4. Run 43509607962 audits a sample of the Makora corpus.
+4. Run 43511475144 audits a sample of the Makora corpus. One of its eight shards was stopped by the runner and has to be rerun.
