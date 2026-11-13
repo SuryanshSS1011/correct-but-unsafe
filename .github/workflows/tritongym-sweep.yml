@@ -1,0 +1,59 @@
+name: tritongym-sweep
+
+# Runs the CPU detectors over every TritonGym data_v2 reference kernel at one
+# commit. At the fixed commit this estimates how often the detectors fire on
+# kernels that upstream considers correct, and it surfaces any remaining bugs.
+
+on:
+  push:
+    branches: [audit-dev]
+    paths:
+      - ".github/workflows/tritongym-sweep.yml"
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "TritonGym commit"
+        default: "5d64634"
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install -r requirements-cpu.txt
+      - name: Fetch TritonGym
+        run: |
+          git clone --quiet https://github.com/yil384/TritonGym ext/tritongym
+          git -C ext/tritongym checkout --quiet "${{ inputs.commit || '5d64634' }}"
+          git -C ext/tritongym log -1 --format='%H %ad' --date=short
+      - name: Run detectors on shard ${{ matrix.shard }}
+        run: |
+          python controls/tritongym/run_control.py \
+            --checkout ext/tritongym --label "sweep-${{ inputs.commit || '5d64634' }}" \
+            --ops all --shard ${{ matrix.shard }}/8 --dtypes float16,float32 \
+            --detectors plain,tilelens,asan,perturb \
+            --out results/raw/sweep_shard${{ matrix.shard }}.json
+      - name: Summarize
+        if: always()
+        run: python controls/tritongym/summarize.py results/raw/sweep_shard${{ matrix.shard }}.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sweep-shard-${{ matrix.shard }}
+          path: results/raw/
+          retention-days: 30
