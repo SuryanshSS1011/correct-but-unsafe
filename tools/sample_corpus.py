@@ -42,7 +42,8 @@ def main() -> int:
     a = ap.parse_args()
     from datasets import load_dataset
 
-    split, ds = pick_split(load_dataset(NAMES[a.corpus]))
+    # Only the train split is read. The Makora test split has a different schema and fails to load with it.
+    split, ds = "train", load_dataset(NAMES[a.corpus], split="train")
     n = len(ds)
     print(f"{NAMES[a.corpus]} split {split}: {n} rows, columns {ds.column_names}")
     first = ds[0]
