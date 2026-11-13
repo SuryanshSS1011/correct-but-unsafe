@@ -51,6 +51,17 @@ with and without the poison fill, in a fresh process per repeat. Results go to
 
 4. Whether the unwritten region returns memory that held other data. Before each call the marker test creates and frees a tensor of the output's size filled with the value 1027. Output elements equal to 1027 came from that freed block. On the CPU interpreter, 6,144 of 8,192 output elements of `984_r2` and 64 of 128 of `4191_r4` returned the marker.
 
+## Four kernels that crashed on a GPU and run clean on CPU
+
+```
+CUDA_LAUNCH_BLOCKING=1 python gpu/confirm.py --kernels 236:3,481:3,3725:4,6133:2 --repeats 1 --out results/raw/gpu_crash_check.json
+```
+
+KernelGYM recorded an illegal memory access for these four. On CPU they run
+without any out-of-bounds access and match the reference. If they crash here
+too, the interpreter misses something. If they run clean, the recorded error
+came from elsewhere in the worker.
+
 ## Launchers
 
 1. **Modal:** `modal run gpu/modal_app.py`. Set `CBU_GPU=T4` or another type to compare GPUs.

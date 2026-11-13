@@ -132,11 +132,54 @@ the four out-of-bounds ones by both the sanitizer and the oracle.
 Half of the repeat pilot had finished when this was written. On those 147
 kernels neither the sanitizer nor the oracle flagged anything, so they agree.
 
-## 8. Still running
+## 8. The 1-of-5 signature, checked dynamically
 
-1. Run 43475965294 rechecks the 1,725 accepted rounds that L1 marks.
-2. Run 43475957047 rechecks the 453 rejected 1-of-5 rounds.
-3. Run 43475920247 is the repeat pilot with the bounds oracle.
-4. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected.
-5. Run 43498607851 audits the whole accepted population at the benchmark's shape and at three nearby shapes, with the bounds oracle and the poison fill.
-6. Run 43499096153 rechecks the 24 rounds that crashed on the GPU.
+Runs 43475957047 and 43475965294 audited every autotune config of the rounds
+that the lint marks. The numbers below cover the shards that had finished,
+which are 340 of 453 rejected rounds and 1,294 of 1,725 accepted rounds.
+
+| Group | Ran on CPU | At least one partial config | Partial under every config | Partial configs in the config-dependent kernels |
+|---|---|---|---|---|
+| Rejected with exactly 1 of 5 trials passed | 332 of 340 | 315, 94.9% | 2 | 596 of 1,490 |
+| Accepted | 1,272 of 1,294 | 105, 8.3% | 3 | 154 of 503 |
+
+Scaled to the full lists, about 420 rejected rounds and about 140 accepted
+rounds carry a partial config. A kernel with the defect was therefore rejected
+about three times in four. Partial configs are 30% to 40% of the configs, so
+they win about twice as often as a uniform draw would give, which fits a
+smaller block being faster.
+
+## 9. Recall against kernels that crashed on the GPU
+
+Run 43499096153 rechecked the 24 rounds whose GPU run recorded an illegal
+memory access or a device-side assert.
+
+| Outcome on CPU | Rounds |
+|---|---|
+| Flagged by the bounds oracle | 9 |
+| Of those, also flagged by the sanitizer | 5 |
+| Ran and launched a kernel, not flagged | 7 |
+| Ran without launching a kernel | 1 |
+| Interpreter error | 2 |
+| Timed out | 5 |
+
+Of the seven that ran unflagged, three show a different defect on CPU. One
+gives wrong output and two leave most of the output unwritten. Four run clean
+and match the reference: `236_r3`, `481_r3`, `3725_r4` and `6133_r2`. Either
+the interpreter differs from compiled code in a way not yet identified, or the
+recorded error was carried over from another kernel in the same worker. A GPU
+run decides between the two. Until then the out-of-bounds count for accepted
+kernels is a lower bound.
+
+## 10. The repeat pilot and a second corpus
+
+1. Run 43475920247 finished. On 298 random accepted kernels neither the sanitizer nor the bounds oracle flags anything, so they agree.
+2. The traces corpus has 207 rows. None uses autotuning, and its kernels are called through a wrapper function with explicit weights, which the harness does not support. It was not audited.
+3. The Makora corpus is being audited in run 43509607962.
+
+## 11. Still running
+
+1. The last shards of runs 43475965294 and 43475957047.
+2. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected.
+3. Run 43498607851 audits the whole accepted population at the benchmark's shape and at three nearby shapes.
+4. Run 43509607962 audits a sample of the Makora corpus.
