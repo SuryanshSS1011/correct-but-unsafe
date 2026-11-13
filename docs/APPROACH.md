@@ -39,7 +39,7 @@ access type is therefore meaningful confirmation.
 
 ## 3. Validity threats of interpreter-based auditing
 
-1. **Fallback wrappers.** Most model-generated modules return a plain PyTorch result when the input is not a CUDA tensor. In a first sample of 24 accepted Dr. Kernel kernels, 22 contained an `is_cuda` check and none launched a Triton kernel on CPU. `cbu/cpu_shim.py` therefore reports CPU tensors as CUDA tensors while every allocation stays on the CPU. `cbu/target.py` counts interpreter launches, and a run with zero launches is an exclusion, never a clean result.
+1. **Fallback wrappers.** Most model-generated modules return a plain PyTorch result when the input is not a CUDA tensor. In a first sample of 24 accepted Dr. Kernel kernels, 22 contained an `is_cuda` check. Twelve of the 24 were run without the workaround below, and none of them launched a Triton kernel on CPU. `cbu/cpu_shim.py` therefore reports CPU tensors as CUDA tensors while every allocation stays on the CPU. `cbu/target.py` counts interpreter launches, and a run with zero launches is an exclusion, never a clean result.
 2. **Autotuning.** `triton.autotune` benchmarks configs on a GPU driver. The shim replaces it with a proxy that launches once with the first config. A bug that only appears under a later config is not seen.
 3. **Interpreter fidelity.** The interpreter is stricter than the compiler about operand dtypes, and TileLens documents one divergence for `and` and `or` on tensors. A kernel that fails for such a reason is an exclusion.
 4. **Interpreter defects.** An `asan` report counts only when its stack contains the interpreter's load or store.

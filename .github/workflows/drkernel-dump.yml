@@ -1,0 +1,31 @@
+name: drkernel-dump
+
+# Dumps the source of chosen Dr. Kernel kernels as an artifact for manual
+# triage. This job only reads data. It executes no corpus code.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernels:
+        description: "comma-separated uuid:round items"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install datasets
+      - run: python tools/dump_kernels.py --kernels "${{ inputs.kernels }}" --out data/dump.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kernel-dump
+          path: data/dump.jsonl
+          retention-days: 30
