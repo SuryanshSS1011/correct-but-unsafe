@@ -2,7 +2,8 @@
 
 This document records what the study has established, what is still open, and
 which decisions follow. Its purpose is to make sure no large amount of compute
-or time is spent before the analysis behind it is done. Numbers come from the
+or time is spent before the analysis behind it is done. It supersedes the go
+and no-go rules of the December plan. Numbers come from the
 files in `results/`. Entries marked **pending** depend on runs that were still
 in progress when this was written, and section 6 says how each pending number
 would change a decision.
@@ -24,7 +25,7 @@ source reading only. Grade C means inference.
 | 7 | The fixed-grid pattern lowers acceptance. | 42.7% of 4,044 rounds with the pattern were accepted, against 66.6% of 8,119 autotuned rounds whose grid depends on the config. | A |
 | 8 | The model usually repairs the pattern after a failure. | After a 1-of-5 failure, 384 of 453 next rounds use a grid that depends on the config, and 311 of those were accepted. | A |
 | 9 | The pattern is not rewarded with speed. | Accepted rounds with the pattern have a median speedup of 0.63, against 0.60 and 0.68 for the other two groups. | A |
-| 10 | AddressSanitizer on the interpreter and an exact bounds oracle agree. | They agree on every config of the 24 flagged kernels rechecked so far. The pilot comparison on a random sample is **pending**. | B |
+| 10 | AddressSanitizer on the interpreter and an exact bounds oracle agree. | They agree on all 37 flagged cases of the positive control and on all 104 configs of the 27 flagged kernels rechecked so far. The comparison on a random sample is **pending**. | B |
 | 11 | A static rule finds the config-dependent class. | Rule L1 marks 23 of the 24 config-dependent census kernels. It also marks 281 accepted best-round kernels that the census did not flag, so it over-approximates. | B |
 
 ## 2. What changed in the reading of the results
@@ -42,7 +43,7 @@ source reading only. Grade C means inference.
 | 3 | Is the 1-of-5 signature really the partial-write defect? | Dynamic recheck of the 453 rejected rounds. **Pending.** | Free CI, about one hour. |
 | 4 | Does the rate hold outside this corpus? | A static L1 scan of other public Triton corpora, then a dynamic check of what it marks. | Free CI. No generation cost. |
 | 5 | How many more kernels fail at a nearby shape? | A population run with shape constants increased by one. The pilot found 2 more partial writes in 298 kernels. | Free CI, about four hours. |
-| 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 24 rechecked kernels, 1 behaves differently between modes. | Low impact. No action. |
+| 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 27 rechecked kernels, 2 behave differently between modes. | Low impact. No action. |
 
 ## 4. Decisions
 
@@ -75,8 +76,9 @@ source reading only. Grade C means inference.
 |---|---|
 | The interpreter differs from compiled code. | Three divergences were found and handled: `and` and `or` on tensors, atomic operations invisible to the sanitizer, and import-time self-tests. The GPU kit is the remaining check. |
 | A preloaded sanitizer misses accesses that land in another allocation. | The bounds oracle tracks which allocation each pointer came from and does not depend on the allocator. |
-| Nineteen census kernels were classified by signature and not read. | The recheck gives per-config evidence for every flagged kernel, so the classification no longer rests on the signature alone. |
-| The harness ran in a different mode from the audit. | Rechecked in both modes. One of 24 differs. |
+| Nineteen census kernels were classified by signature and not read. | The recheck confirmed a partial config for all 21 uninitialized-output kernels it has finished, so the classification no longer rests on the signature alone. Nine kernels with large inputs were still running. |
+| The harness ran in a different mode from the audit. | Rechecked in both modes. Two of 27 differ, because their kernel does not launch in training mode. |
+| The static rule over-approximates. | It marks kernels whose tuned parameter is consumed by a loop inside the kernel, including four human-written TritonBench references that are safe. Only the dynamic check per config counts as a finding. |
 | 117 kernels could not be audited. | 102 are timeouts on large inputs. They are 1.9% of the population and are reported as exclusions. |
 | One corpus from one model family. | Open. See D4. |
 | Related work on stale memory in kernel evaluation exists. | An industry report from Wafer describes a kernel that read uninitialized memory and passed a tolerance check. It proposes a bitwise determinism check and clears the allocator cache between timing iterations. Whether that catches the config-dependent class has not been tested here, and the paper has to position against it. |
