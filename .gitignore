@@ -8,3 +8,4 @@ ext/
 .DS_Store
 /tmp/
 results/raw/
+pilot_summary.json

@@ -1,9 +1,0 @@
-{
- "n": 8,
- "auditable": 6,
- "flagged": 0,
- "exclusions": {
-  "AssertionError: libcuda.so cannot found!": 2
- },
- "flagged_kernels": []
-}
