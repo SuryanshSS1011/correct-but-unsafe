@@ -1,9 +1,12 @@
-"""Fetch the Dr. Kernel cold-start corpus, join it with released verifier verdicts, and write a stratified sample.
+"""Build the audit population from the Dr. Kernel cold-start corpus and write a random sample.
 
-The corpus has no correctness column. The contract-grade verifier (RishiShah99/lethe,
-MIT) released per-row verdicts for 3,134 kernels, keyed by an integer id. This
-script checks that the id is the dataset row index by comparing `final_speedup`,
-then samples accepted rows by operator class and speedup quartile.
+Population: one kernel per trajectory, taken from the trajectory's best round,
+kept only when that round has recorded KernelGYM feedback saying the kernel
+compiled, passed the correctness trials, and was not a decoy. Round 5 has no
+recorded feedback, so trajectories whose best round is 5 are left out.
+
+The contract-grade verifier (RishiShah99/lethe, MIT) released per-row verdicts
+keyed by the corpus `uuid` column. They are attached when available.
 """
 from __future__ import annotations
 
@@ -12,97 +15,98 @@ import collections
 import gzip
 import json
 import random
-import statistics
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import extract  # noqa: E402
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--lethe", required=True, help="path to a lethe checkout")
-    ap.add_argument("--n", type=int, default=300)
+    ap.add_argument("--lethe", default=None, help="path to a lethe checkout (optional)")
+    ap.add_argument("--n", type=int, default=300, help="sample size, or 0 for the whole population")
     ap.add_argument("--seed", type=int, default=20261113)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--all-accepted", action="store_true", help="write every accepted row instead of a sample")
     a = ap.parse_args()
 
     from datasets import load_dataset
 
     ds = load_dataset("hkust-nlp/drkernel-coldstart-8k", split="train")
     print("rows", len(ds))
-    print("features", ds.features)
-    info = getattr(ds, "info", None)
-    print("fingerprint", getattr(ds, "_fingerprint", None))
-    print("best_round", collections.Counter(ds["best_round"]))
-    sp = ds["final_speedup"]
-    print("final_speedup >0:", sum(1 for x in sp if x and x > 0), ">1:", sum(1 for x in sp if x and x > 1), "median:", statistics.median(sp))
-    print("enable_thinking", collections.Counter(ds["enable_thinking"]))
 
-    verdicts = [json.loads(line) for line in gzip.open(Path(a.lethe) / "results" / "audit_rows.jsonl.gz", "rt")]
-    print("verifier rows", len(verdicts), collections.Counter(v["status"] for v in verdicts))
-    match = mismatch = 0
-    for v in verdicts:
-        i = int(v["id"])
-        if i < len(ds) and abs(float(ds[i]["final_speedup"]) - float(v["final_speedup"])) < 1e-9:
-            match += 1
-        else:
-            mismatch += 1
-    print(f"id-as-row-index check: {match} match, {mismatch} mismatch")
+    verdicts = {}
+    if a.lethe:
+        for line in gzip.open(Path(a.lethe) / "results" / "audit_rows.jsonl.gz", "rt"):
+            v = json.loads(line)
+            verdicts[int(v["id"])] = v
+        by_uuid = {int(u): float(s) for u, s in zip(ds["uuid"], ds["final_speedup"])}
+        match = sum(1 for u, v in verdicts.items() if u in by_uuid and abs(by_uuid[u] - float(v["final_speedup"])) < 1e-9)
+        print(f"verifier rows {len(verdicts)}; id matches corpus uuid with equal final_speedup: {match}")
 
-    accepted = [v for v in verdicts if v["status"] == "gated" and float(v["final_speedup"]) > 0]
-    print("accepted (gated and final_speedup > 0):", len(accepted))
-    speeds = sorted(float(v["final_speedup"]) for v in accepted)
-    q = [speeds[int(len(speeds) * k / 4)] for k in (1, 2, 3)]
+    stats = collections.Counter()
+    population = []
+    for row in ds:
+        rs = extract.rounds(row["messages"])
+        for x in rs:
+            fb = x["feedback"]
+            if fb is not None:
+                stats["rounds_with_feedback"] += 1
+                if fb.get("compiled") and fb.get("correctness") and not fb.get("decoy_kernel"):
+                    stats["rounds_accepted"] += 1
+        br = int(row["best_round"])
+        stats[f"best_round_{br}"] += 1
+        if br > len(rs) or br > 4:
+            stats["skip_best_round_without_feedback"] += 1
+            continue
+        best = rs[br - 1]
+        fb = best["feedback"] or {}
+        if not best["code"]:
+            stats["skip_no_code"] += 1
+            continue
+        if not (fb.get("compiled") and fb.get("correctness") and not fb.get("decoy_kernel")):
+            stats["skip_best_round_not_accepted"] += 1
+            continue
+        v = verdicts.get(int(row["uuid"]))
+        ver = None
+        if v is not None:
+            gates = v.get("gates") or {}
+            ver = {
+                "status": v.get("status"),
+                "op_class": v.get("op_class"),
+                "native_shape": v.get("native_shape"),
+                "output_aliasing": v.get("output_aliasing"),
+                "gates_failed": sorted(g for g, r in gates.items() if isinstance(r, dict) and r.get("status") == "fail"),
+            }
+        population.append(
+            {
+                "uuid": int(row["uuid"]),
+                "round": br,
+                "best_round": br,
+                "final_speedup": row["final_speedup"],
+                "entry_point": row["entry_point"],
+                "ref_code": row["original_python_code"],
+                "code": best["code"],
+                "feedback": fb,
+                "verifier": ver,
+            }
+        )
+    stats["population"] = len(population)
+    stats["population_with_verifier_verdict"] = sum(1 for p in population if p["verifier"])
+    for k in sorted(stats):
+        print(f"{k}: {stats[k]}")
 
-    def quartile(x: float) -> int:
-        return sum(x >= t for t in q)
-
-    strata = collections.defaultdict(list)
-    for v in accepted:
-        strata[(v["op_class"], quartile(float(v["final_speedup"])))].append(v)
+    population.sort(key=lambda p: p["uuid"])
     rng = random.Random(a.seed)
-    if a.all_accepted:
-        chosen = accepted
-    else:
-        chosen = []
-        keys = sorted(strata)
-        for k in keys:
-            rng.shuffle(strata[k])
-        per = max(1, a.n // len(keys))
-        for k in keys:
-            chosen += strata[k][:per]
-        rest = [v for k in keys for v in strata[k][per:]]
-        rng.shuffle(rest)
-        chosen += rest[: max(0, a.n - len(chosen))]
-        chosen = chosen[: a.n]
-    print("chosen", len(chosen), collections.Counter(v["op_class"] for v in chosen))
-
+    chosen = population if a.n <= 0 else rng.sample(population, min(a.n, len(population)))
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w") as f:
-        for v in chosen:
-            row = ds[int(v["id"])]
-            gates = v.get("gates") or {}
-            rec = {
-                "id": int(v["id"]),
-                "uuid": row.get("uuid"),
-                "entry_point": row.get("entry_point"),
-                "repo_name": row.get("repo_name"),
-                "module_name": row.get("module_name"),
-                "final_speedup": row.get("final_speedup"),
-                "best_round": row.get("best_round"),
-                "num_rounds": row.get("num_rounds"),
-                "original_python_code": row.get("original_python_code"),
-                "messages": row.get("messages"),
-                "verifier": {
-                    "op_class": v.get("op_class"),
-                    "native_shape": v.get("native_shape"),
-                    "output_aliasing": v.get("output_aliasing"),
-                    "gates_failed": sorted(g for g, r in gates.items() if isinstance(r, dict) and r.get("status") == "fail"),
-                    "gates_passed_all": all(isinstance(r, dict) and r.get("status") != "fail" for r in gates.values()) if gates else None,
-                },
-            }
-            f.write(json.dumps(rec) + "\n")
-    print("wrote", out, out.stat().st_size, "bytes")
+    opener = gzip.open if str(out).endswith(".gz") else open
+    with opener(out, "wt") as f:
+        for p in chosen:
+            f.write(json.dumps(p) + "\n")
+    (out.parent / "population_stats.json").write_text(json.dumps(dict(stats), indent=1))
+    print("wrote", len(chosen), "kernels to", out)
     return 0
 
 

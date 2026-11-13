@@ -62,25 +62,14 @@ def find_asan_preload() -> str | None:
 
 
 def _target_cmd(spec: dict, mode: str) -> list[str]:
-    cmd = [
-        sys.executable,
-        "-m",
-        "cbu.target",
-        "--file",
-        spec["file"],
-        "--op",
-        spec["op"],
-        "--shapes",
-        json.dumps(spec["shapes"]),
-        "--mode",
-        mode,
-        "--dtype",
-        spec.get("dtype", "float32"),
-    ]
-    if spec.get("func"):
-        cmd += ["--func", spec["func"]]
-    if spec.get("root"):
-        cmd += ["--root", spec["root"]]
+    cmd = [sys.executable, "-m", "cbu.target", "--file", spec["file"], "--op", spec.get("op", "kernel"), "--mode", mode]
+    cmd += ["--adapter", spec.get("adapter", "tritongym")]
+    cmd += ["--shapes", json.dumps(spec.get("shapes", []))]
+    cmd += ["--dtype", spec.get("dtype", "float32")]
+    cmd += ["--variant", spec.get("variant", "native")]
+    for key, flag in (("func", "--func"), ("root", "--root"), ("ref_file", "--ref-file")):
+        if spec.get(key):
+            cmd += [flag, spec[key]]
     return cmd
 
 

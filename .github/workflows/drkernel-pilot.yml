@@ -1,0 +1,82 @@
+name: drkernel-pilot
+
+# Audits a random sample of Dr. Kernel kernels that the KernelGYM harness
+# accepted. Shards run the CPU detectors in parallel. The jobs execute corpus
+# code, so they hold no secrets and have a read-only token.
+
+on:
+  push:
+    branches: [audit-dev]
+    paths:
+      - "pilot/drkernel/**"
+      - ".github/workflows/drkernel-pilot.yml"
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "sample size (0 for the whole population)"
+        default: "300"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drkernel-pilot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install -r requirements-cpu.txt datasets
+          python -c "import torch, triton; print(torch.__version__, triton.__version__)"
+      - name: Fetch verifier verdicts
+        run: |
+          git clone --quiet https://github.com/RishiShah99/lethe ext/lethe
+          git -C ext/lethe checkout --quiet 39db72c9964f
+      - name: Build sample
+        run: python pilot/drkernel/fetch_sample.py --lethe ext/lethe --n "${{ inputs.n || '300' }}" --out data/pilot.jsonl
+      - name: Run detectors on shard ${{ matrix.shard }}
+        run: |
+          python pilot/drkernel/run_pilot.py --data data/pilot.jsonl --shard ${{ matrix.shard }}/8 \
+            --detectors plain,tilelens,asan,perturb --variants native,batch3 \
+            --out results/raw/pilot_shard${{ matrix.shard }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pilot-shard-${{ matrix.shard }}
+          path: |
+            results/raw/
+            data/population_stats.json
+          retention-days: 30
+
+  summarize:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pilot-shard-*
+          path: shards
+      - name: Summarize
+        run: |
+          python pilot/drkernel/summarize.py "shards/**/pilot_shard*.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot-summary
+          path: pilot_summary.json
+          retention-days: 30

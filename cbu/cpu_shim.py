@@ -3,9 +3,15 @@
 Benchmark and model-generated kernels usually hard-code `device='cuda'` or call
 `.cuda()`. On a CPU-only runner those calls raise before any kernel executes.
 The shim rewrites device arguments on the common tensor factories and on
-`Tensor.to`, `Tensor.cuda`, `Module.to` and `Module.cuda`. It does not emulate a
-GPU. Code that inspects `tensor.is_cuda` or CUDA memory statistics can still
-fail, and the caller records that as an exclusion.
+`Tensor.to`, `Tensor.cuda`, `Module.to` and `Module.cuda`.
+
+Most model-generated wrappers also fall back to plain PyTorch when the input is
+not a CUDA tensor. In that case no Triton kernel launches and nothing is
+audited. With `pretend_cuda=True` the shim reports CPU tensors as CUDA tensors
+(`is_cuda`, `device`, `get_device`, `torch.cuda.is_available`) while every
+allocation still lands on the CPU, so the wrapper takes its Triton path. The
+target runner counts interpreter launches, and a run with zero launches is an
+exclusion, never a clean result.
 """
 from __future__ import annotations
 
@@ -54,7 +60,55 @@ def _wrap_factory(fn):
     return inner
 
 
-def install() -> None:
+class _AutotuneProxy:
+    """Stand-in for triton.autotune under the interpreter.
+
+    The real autotuner benchmarks every config on a GPU driver, which does not
+    exist on a CPU runner. The proxy launches the kernel once with the first
+    config. Bugs that only appear under a later config are therefore not seen.
+    """
+
+    def __init__(self, fn, configs):
+        self.fn = fn
+        self.configs = list(configs or [])
+        self.best_config = self.configs[0] if self.configs else None
+
+    def _config_kwargs(self) -> dict:
+        cfg = self.best_config
+        if cfg is None:
+            return {}
+        if hasattr(cfg, "all_kwargs"):
+            try:
+                return dict(cfg.all_kwargs())
+            except Exception:  # noqa: BLE001
+                pass
+        return dict(getattr(cfg, "kwargs", {}) or {})
+
+    def __getitem__(self, grid):
+        def launch(*args, **kwargs):
+            merged = self._config_kwargs()
+            merged.update(kwargs)
+            return self.fn[grid](*args, **merged)
+
+        return launch
+
+    def run(self, *args, **kwargs):
+        merged = self._config_kwargs()
+        merged.update(kwargs)
+        return self.fn.run(*args, **merged)
+
+    def __getattr__(self, name):
+        return getattr(self.fn, name)
+
+
+def _fake_autotune(configs=None, key=None, **_ignored):
+    def decorator(fn):
+        return _AutotuneProxy(fn, configs)
+
+    return decorator
+
+
+def install(pretend_cuda: bool = True) -> None:
     global _INSTALLED
     if _INSTALLED:
         return
@@ -99,4 +153,17 @@ def install() -> None:
     cuda.manual_seed = lambda *a, **k: None
     cuda.manual_seed_all = lambda *a, **k: None
     cuda.set_device = lambda *a, **k: None
+    try:
+        import triton
+
+        triton.autotune = _fake_autotune
+        triton.runtime.autotune = _fake_autotune
+    except Exception:  # noqa: BLE001 - triton is optional for the shim itself
+        pass
+    if pretend_cuda:
+        fake = torch.device("cuda", 0)
+        cuda.is_available = lambda *a, **k: True
+        torch.Tensor.is_cuda = property(lambda self: True)
+        torch.Tensor.device = property(lambda self: fake)
+        torch.Tensor.get_device = lambda self, *a, **k: 0
     _INSTALLED = True
