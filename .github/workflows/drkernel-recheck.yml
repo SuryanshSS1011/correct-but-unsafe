@@ -17,6 +17,12 @@ on:
       shards:
         description: "number of shards, at most 12"
         default: "8"
+      light:
+        description: "true for plain, bounds and poison per config only"
+        default: "false"
+      budget:
+        description: "seconds per kernel"
+        default: "3000"
 
 permissions:
   contents: read
@@ -54,12 +60,16 @@ jobs:
           if [ "$KERNELS" = "flagged" ]; then
             KERNELS=$(python -c "import json;t=json.load(open('results/triage-census.json'));ids=list(t['out_of_bounds_read'])+list(t['uninitialized_output_source_read'])+t['uninitialized_output_pattern_only']+list(t['false_positive']);print(','.join(i.replace('_r',':') for i in sorted(ids)))")
           fi
+          if [ "$KERNELS" = "l1_accepted" ] || [ "$KERNELS" = "l1_rejected_1of5" ]; then
+            KERNELS=$(python -c "import json,sys;print(','.join(json.load(open('results/lint_summary.json'))[sys.argv[1]+('_rounds' if sys.argv[1]=='l1_accepted' else '')]))" "$KERNELS")
+          fi
           python tools/dump_kernels.py --kernels "$KERNELS" --out data/recheck.jsonl
       - name: Recheck shard ${{ matrix.shard }}
         if: steps.gate.outputs.run == '1'
         run: |
           timeout --signal=INT 330m python pilot/drkernel/recheck.py --data data/recheck.jsonl --shard ${{ matrix.shard }}/${{ inputs.shards || '8' }} \
-            --modes "${{ inputs.modes || 'eval,train' }}" --out results/raw/recheck_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
+            --modes "${{ inputs.modes || 'eval,train' }}" --budget "${{ inputs.budget || '3000' }}" ${{ inputs.light == 'true' && '--light' || '' }} \
+            --out results/raw/recheck_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
       - uses: actions/upload-artifact@v4
         if: always() && steps.gate.outputs.run == '1'
         with:

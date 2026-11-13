@@ -328,36 +328,87 @@ def _bounds_oracle() -> dict:
     not depend on the allocator, so it also sees an access that lands in another
     live allocation, which a redzone-based sanitizer misses.
     """
-    state = {"ranges": [], "violations": [], "n": 0, "accesses": 0, "active": False}
+    state = {"ranges": [], "base_of": {}, "violations": [], "n": 0, "accesses": 0, "with_provenance": 0, "active": False}
     try:
         import numpy as np
         import torch
         import triton.runtime.interpreter as interp
 
         builder = interp.InterpreterBuilder
+        handle_t = interp.TensorHandle
         orig_call = interp.GridExecutor.__call__
+
+        def is_ptr(h) -> bool:
+            try:
+                return isinstance(h, handle_t) and h.dtype.is_ptr()
+            except Exception:  # noqa: BLE001
+                return False
+
+        def prov_of(h):
+            """The allocations a pointer was derived from, or None when that is unknown."""
+            p = getattr(h, "_cbu_prov", None)
+            if p is not None:
+                return p
+            d = np.asarray(h.data)
+            if d.size == 1:
+                r = state["base_of"].get(int(d.reshape(-1)[0]))
+                if r is not None:
+                    return (r,)
+            return None
+
+        def propagate(orig):
+            # A pointer produced from pointer operands keeps their provenance. This covers
+            # pointer arithmetic, broadcasts, reshapes and a select between two pointers.
+            def f(self, *args, **kw):
+                out = orig(self, *args, **kw)
+                try:
+                    if is_ptr(out):
+                        ps: set = set()
+                        for v in args:
+                            if is_ptr(v):
+                                p = prov_of(v)
+                                if p:
+                                    ps.update(p)
+                        if ps:
+                            out._cbu_prov = tuple(sorted(ps))
+                except Exception:  # noqa: BLE001
+                    pass
+                return out
+
+            return f
+
+        for name in dir(builder):
+            if name.startswith("create_") and callable(getattr(builder, name)):
+                setattr(builder, name, propagate(getattr(builder, name)))
         orig_load, orig_store = builder.create_masked_load, builder.create_masked_store
 
         def call(self, *args, **kwargs):
-            ranges = []
+            ranges, base_of = [], {}
             for v in list(args) + list(kwargs.values()):
                 if isinstance(v, torch.Tensor) and v.numel():
                     st = v.untyped_storage()
-                    ranges.append((int(st.data_ptr()), int(st.data_ptr()) + int(st.nbytes())))
-            prev, state["ranges"] = state["ranges"], sorted(set(ranges))
+                    r = (int(st.data_ptr()), int(st.data_ptr()) + int(st.nbytes()))
+                    ranges.append(r)
+                    base_of[int(v.data_ptr())] = r
+            prev = (state["ranges"], state["base_of"])
+            state["ranges"], state["base_of"] = sorted(set(ranges)), base_of
             try:
                 return orig_call(self, *args, **kwargs)
             finally:
-                state["ranges"] = prev
+                state["ranges"], state["base_of"] = prev
 
         def check(ptr, mask, kind):
-            ranges = state["ranges"]
-            if not ranges:
+            if not state["ranges"]:
                 return
             try:
+                prov = prov_of(ptr)
+                ranges = prov or state["ranges"]
                 size = max(1, int(ptr.dtype.element_ty.primitive_bitwidth) // 8)
                 p, m = np.broadcast_arrays(np.asarray(ptr.data, dtype=np.int64), np.asarray(mask.data).astype(bool))
-                state["accesses"] += int(m.sum())
+                lanes = int(m.sum())
+                state["accesses"] += lanes
+                if prov:
+                    state["with_provenance"] += lanes
                 ok = np.zeros(p.shape, dtype=bool)
                 for lo, hi in ranges:
                     ok |= (p >= lo) & (p + size <= hi)
@@ -368,11 +419,12 @@ def _bounds_oracle() -> dict:
                 if len(state["violations"]) < 8:
                     addr = int(p[bad].ravel()[0])
                     lo, hi = min(ranges, key=lambda r: min(abs(addr - r[0]), abs(addr - r[1])))
-                    state["violations"].append({
-                        "kind": kind, "size": size, "lanes": int(bad.sum()), "region_bytes": hi - lo,
-                        "side": "before" if addr < lo else "after",
-                        "offset_bytes": (lo - addr) if addr < lo else (addr - hi),
-                    })
+                    v = {"kind": kind, "size": size, "lanes": int(bad.sum()), "region_bytes": hi - lo, "provenance": bool(prov),
+                         "side": "before" if addr < lo else "after", "offset_bytes": (lo - addr) if addr < lo else (addr - hi)}
+                    state["violations"].append(v)
+                    if len(state["violations"]) <= 3:
+                        # Printed at once, so the finding survives if the access then kills the process.
+                        print("CBU_BOUNDS:" + json.dumps(v), flush=True)
             except Exception as e:  # noqa: BLE001 - the oracle must never change the kernel's behaviour
                 state.setdefault("errors", []).append(f"{type(e).__name__}: {e}"[:160])
 
@@ -740,7 +792,7 @@ def main() -> int:
     res["seconds"] = round(time.time() - t0, 3)
     res["kernel_launches"] = launches.get("n")
     res["atomic_ops"] = atomics.get("n") if isinstance(atomics, dict) else None
-    res["bounds"] = {k: bounds.get(k) for k in ("active", "n", "accesses", "violations", "errors", "install_error") if bounds.get(k) is not None}
+    res["bounds"] = {k: bounds.get(k) for k in ("active", "n", "accesses", "with_provenance", "violations", "errors", "install_error") if bounds.get(k) is not None}
     res["model_mode"] = a.model_mode
     res["tensor_boolops"] = boolops.get("n") if isinstance(boolops, dict) else None
     try:

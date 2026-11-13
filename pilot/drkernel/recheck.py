@@ -43,6 +43,7 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=900)
     ap.add_argument("--budget", type=int, default=3000, help="seconds per kernel")
     ap.add_argument("--no-replay", action="store_true")
+    ap.add_argument("--light", action="store_true", help="plain, bounds and poison per config only")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -81,10 +82,11 @@ def main() -> int:
                 if pres.get("status") == "ok":
                     spec["baseline"] = {"nan": (pres.get("output") or {}).get("nan")}
                     c["poison"] = slim(detect.run_poison(spec, timeout=a.timeout))
-                    c["asan"] = slim(detect.run_asan(spec, timeout=a.timeout))
+                    if not a.light:
+                        c["asan"] = slim(detect.run_asan(spec, timeout=a.timeout))
                 m["configs"].append(c)
                 print(f"{kid} {mode} cfg{cfg}: launches={pres.get('kernel_launches')} bounds={c['bounds'].get('flagged')} poison={(c.get('poison') or {}).get('unwritten_fraction')} asan={(c.get('asan') or {}).get('flagged')}", flush=True)
-            if not a.no_replay:
+            if not (a.no_replay or a.light):
                 for winner in range(n_cfg):
                     if time.time() - t0 > a.budget:
                         m["skipped_for_budget"] = True

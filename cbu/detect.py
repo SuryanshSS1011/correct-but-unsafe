@@ -96,6 +96,11 @@ def _run(spec: dict, mode: str, env_extra: dict, timeout: int) -> dict:
                 out["result"] = json.loads(line[len(MARK):])
             except json.JSONDecodeError:
                 out["result"] = {"status": "bad_json"}
+        elif line.startswith("CBU_BOUNDS:"):
+            try:
+                out.setdefault("bounds_lines", []).append(json.loads(line[len("CBU_BOUNDS:"):]))
+            except json.JSONDecodeError:
+                pass
     out["stderr_tail"] = stderr[-1500:]
     out["_stderr"] = stderr
     return out
@@ -260,12 +265,14 @@ def bounds_from(plain: dict) -> dict:
     """Read the exact bounds oracle out of a finished plain run. It costs no extra run."""
     res = plain.get("result") or {}
     b = res.get("bounds") or {}
+    early = plain.get("bounds_lines") or []
     return {
-        "active": bool(b.get("active")),
+        "active": bool(b.get("active")) or bool(early),
         "violating_lanes": int(b.get("n") or 0),
         "accesses": int(b.get("accesses") or 0),
-        "violations": b.get("violations") or [],
-        "flagged": bool(b.get("n")),
+        "with_provenance": int(b.get("with_provenance") or 0),
+        "violations": b.get("violations") or early,
+        "flagged": bool(b.get("n")) or bool(early),
         "result": {"status": res.get("status"), "kernel_launches": res.get("kernel_launches")},
     }
 
