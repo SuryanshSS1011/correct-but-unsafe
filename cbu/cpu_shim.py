@@ -16,8 +16,11 @@ exclusion, never a clean result.
 from __future__ import annotations
 
 import functools
+import os
 
 _INSTALLED = False
+# Largest number of autotune configs seen on any kernel in this process.
+AUTOTUNE_SEEN = {"max_configs": 0}
 
 _FACTORIES = [
     "randn", "rand", "randint", "randperm", "zeros", "ones", "empty", "full", "tensor", "as_tensor",
@@ -64,14 +67,17 @@ class _AutotuneProxy:
     """Stand-in for triton.autotune under the interpreter.
 
     The real autotuner benchmarks every config on a GPU driver, which does not
-    exist on a CPU runner. The proxy launches the kernel once with the first
-    config. Bugs that only appear under a later config are therefore not seen.
+    exist on a CPU runner. The proxy launches the kernel once with one config.
+    CBU_AUTOTUNE_INDEX selects the config, so the caller can audit every config.
+    Any of them can win on some GPU, so each one has to be safe.
     """
 
     def __init__(self, fn, configs):
         self.fn = fn
         self.configs = list(configs or [])
-        self.best_config = self.configs[0] if self.configs else None
+        AUTOTUNE_SEEN["max_configs"] = max(AUTOTUNE_SEEN["max_configs"], len(self.configs))
+        index = int(os.environ.get("CBU_AUTOTUNE_INDEX", "0") or 0)
+        self.best_config = self.configs[index % len(self.configs)] if self.configs else None
 
     def _config_kwargs(self) -> dict:
         cfg = self.best_config

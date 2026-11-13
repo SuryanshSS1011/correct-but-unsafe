@@ -27,6 +27,11 @@ def pct(k: int, n: int) -> str:
 def classify(kernel: dict) -> dict:
     out = {"id": kernel["id"], "auditable": False, "exclusion": None, "flags": {}, "details": [], "matches_ref_native": None}
     native = next((r for r in kernel["runs"] if r["variant"] == "native"), None)
+    out["config_mismatch"] = []
+    for r in kernel["runs"]:
+        pres = (r["detectors"].get("plain", {}).get("result") or {})
+        if r.get("autotune_index") and pres.get("status") == "ok" and (pres.get("reference") or {}).get("allclose_1e-2") is False:
+            out["config_mismatch"].append(r["variant"])
     if native is None:
         out["exclusion"] = "no native run"
         return out

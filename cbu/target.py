@@ -343,6 +343,13 @@ def main() -> int:
         res["traceback"] = traceback.format_exc()[-3000:]
     res["seconds"] = round(time.time() - t0, 3)
     res["kernel_launches"] = launches.get("n")
+    try:
+        from cbu import cpu_shim as _shim
+
+        res["autotune_max_configs"] = _shim.AUTOTUNE_SEEN["max_configs"]
+        res["autotune_index"] = int(os.environ.get("CBU_AUTOTUNE_INDEX", "0") or 0)
+    except Exception:  # noqa: BLE001
+        pass
     if a.mode == "tilelens":
         res["kernel_launches"] = max(launches.get("n") or 0, TILELENS_LAUNCHES["n"])
         try:

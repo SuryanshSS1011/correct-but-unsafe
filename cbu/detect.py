@@ -79,6 +79,7 @@ def _run(spec: dict, mode: str, env_extra: dict, timeout: int) -> dict:
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env.setdefault("OMP_NUM_THREADS", "1")
     env.setdefault("MKL_NUM_THREADS", "1")
+    env["CBU_AUTOTUNE_INDEX"] = str(spec.get("autotune_index", 0))
     env.update(env_extra)
     out: dict = {"returncode": None, "result": None, "timeout": False}
     try:
@@ -187,12 +188,13 @@ def run_asan(spec: dict, timeout: int = 1800, redzone: int = 2048) -> dict:
 def run_perturb(spec: dict, timeout: int = 600, fills: tuple[int, int] = (85, 170)) -> dict:
     """Run with two different fill bytes for fresh and freed heap memory and compare the outputs."""
     runs = {}
-    for label, env in (
-        ("base_a", {}),
-        ("base_b", {}),
-        (f"fill_{fills[0]}", {"MALLOC_PERTURB_": str(fills[0])}),
-        (f"fill_{fills[1]}", {"MALLOC_PERTURB_": str(fills[1])}),
-    ):
+    plan = [("base_a", {}), ("base_b", {}), (f"fill_{fills[0]}", {"MALLOC_PERTURB_": str(fills[0])}), (f"fill_{fills[1]}", {"MALLOC_PERTURB_": str(fills[1])})]
+    baseline = spec.get("baseline")
+    if baseline and baseline.get("out"):
+        # The caller already has one unperturbed run. Reuse it and save a subprocess.
+        runs["base_a"] = {"status": "ok", "returncode": 0, "timeout": False, "out": baseline.get("out"), "inp": baseline.get("inp"), "nan": baseline.get("nan"), "exception": None, "reused": True}
+        plan = plan[1:]
+    for label, env in plan:
         env = dict(env, TRITON_INTERPRET="1")
         x = _run(spec, "plain", env, timeout)
         x.pop("_stderr", None)

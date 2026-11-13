@@ -35,6 +35,8 @@ def main() -> int:
     ap.add_argument("--detectors", default="plain,tilelens,asan,perturb")
     ap.add_argument("--variants", default="native,batch3")
     ap.add_argument("--timeout", type=int, default=600)
+    ap.add_argument("--max-configs", type=int, default=6, help="audit at most this many autotune configs per kernel")
+    ap.add_argument("--budget", type=int, default=1500, help="seconds per kernel before remaining variants are skipped")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -57,13 +59,25 @@ def main() -> int:
         entry = {k: item.get(k) for k in ("uuid", "round", "best_round", "final_speedup", "feedback", "verifier", "entry_point")}
         entry["id"] = kid
         entry["runs"] = []
-        skip_variants = False
-        for variant in variants:
-            if skip_variants and variant != "native":
+        # Each work item is (shape variant, autotune config index). Config indices
+        # beyond 0 are added after the first run reports how many configs exist.
+        queue = [(v, 0) for v in variants]
+        done = set()
+        native_failed = False
+        kernel_t0 = time.time()
+        while queue:
+            variant, cfg = queue.pop(0)
+            if (variant, cfg) in done or (native_failed and (variant, cfg) != ("native", 0)):
                 continue
-            spec = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": variant}
-            run = {"variant": variant, "detectors": {}}
+            if time.time() - kernel_t0 > a.budget:
+                entry.setdefault("skipped_for_budget", []).append([variant, cfg])
+                continue
+            done.add((variant, cfg))
+            spec = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": variant, "autotune_index": cfg}
+            run = {"variant": variant if cfg == 0 else f"{variant}/cfg{cfg}", "shape_variant": variant, "autotune_index": cfg, "detectors": {}}
             for det in detectors:
+                if det == "tilelens" and cfg > 0:
+                    continue  # the symbolic check is run once per shape; extra configs use the concrete detectors
                 t0 = time.time()
                 try:
                     r = DETECTORS[det](spec, timeout=a.timeout)
@@ -72,13 +86,20 @@ def main() -> int:
                 r["wall_seconds"] = round(time.time() - t0, 2)
                 run["detectors"][det] = r
                 res = r.get("result") if isinstance(r.get("result"), dict) else {}
-                print(f"{kid} {variant} {det}: flagged={r.get('flagged')} status={res.get('status')} launches={res.get('kernel_launches')} t={r['wall_seconds']}s", flush=True)
-                if det == "plain" and variant == "native":
-                    # A kernel that cannot run natively on CPU is an exclusion. Do not spend time on its variants.
-                    if res.get("status") != "ok" and r.get("crash_signal") is None:
-                        skip_variants = True
-                if det == "plain" and res.get("status") != "ok" and r.get("crash_signal") is None:
-                    break  # other detectors would hit the same non-memory failure
+                print(f"{kid} {run['variant']} {det}: flagged={r.get('flagged')} status={res.get('status')} launches={res.get('kernel_launches')} t={r['wall_seconds']}s", flush=True)
+                if det == "plain":
+                    if res.get("status") == "ok":
+                        spec["baseline"] = {"out": (res.get("output") or {}).get("sha256"), "inp": (res.get("inputs_after") or {}).get("sha256"), "nan": (res.get("output") or {}).get("nan")}
+                    failed = res.get("status") != "ok" and r.get("crash_signal") is None
+                    if (variant, cfg) == ("native", 0):
+                        # A kernel that cannot run natively on CPU is an exclusion. Skip its other variants.
+                        native_failed = failed
+                        n_cfg = int(res.get("autotune_max_configs") or 0)
+                        entry["autotune_max_configs"] = n_cfg
+                        for extra in range(1, min(n_cfg, a.max_configs)):
+                            queue.append(("native", extra))
+                    if failed:
+                        break  # other detectors would hit the same non-memory failure
             entry["runs"].append(run)
         results["kernels"].append(entry)
         out_path.write_text(json.dumps(results, default=str))
