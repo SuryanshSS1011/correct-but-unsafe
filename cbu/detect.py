@@ -67,7 +67,7 @@ def _target_cmd(spec: dict, mode: str) -> list[str]:
     cmd += ["--shapes", json.dumps(spec.get("shapes", []))]
     cmd += ["--dtype", spec.get("dtype", "float32")]
     cmd += ["--variant", spec.get("variant", "native")]
-    for key, flag in (("func", "--func"), ("root", "--root"), ("ref_file", "--ref-file"), ("model_mode", "--model-mode"), ("replay", "--replay")):
+    for key, flag in (("func", "--func"), ("root", "--root"), ("ref_file", "--ref-file"), ("model_mode", "--model-mode"), ("replay", "--replay"), ("ref_class", "--ref-class"), ("cand_class", "--cand-class")):
         if spec.get(key):
             cmd += [flag, str(spec[key])]
     return cmd

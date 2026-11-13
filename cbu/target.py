@@ -464,12 +464,12 @@ def _run_replay(a, res: dict) -> None:
     get_init = getattr(ref, "get_init_inputs", None)
     init_args = list(get_init() or []) if get_init is not None else []
     torch.manual_seed(a.seed)
-    ref_model = ref.Model(*init_args)
+    ref_model = _pick_class(ref, a.ref_class, "Model")(*init_args)
     res["status"] = "importing"
     torch.manual_seed(a.seed)
     cand = _load_module(a.file, "cbu_target_module")
     torch.manual_seed(a.seed)
-    cand_model = cand.ModelNew(*init_args)
+    cand_model = _pick_class(cand, a.cand_class, "ModelNew")(*init_args)
     if a.model_mode == "eval":
         ref_model.eval()
         cand_model.eval()
@@ -527,6 +527,21 @@ def _run_replay(a, res: dict) -> None:
     res["replay"]["device"] = torch.cuda.get_device_name(0) if on_gpu and not res.get("cpu_shim") else "cpu-interpreter"
 
 
+def _pick_class(mod, name, default: str):
+    """Find the model class. Corpora outside KernelBench do not always call it Model and ModelNew."""
+    import torch
+
+    for want in (name, default):
+        if want and hasattr(mod, want):
+            return getattr(mod, want)
+    classes = [v for v in vars(mod).values() if isinstance(v, type) and issubclass(v, torch.nn.Module) and v.__module__ == mod.__name__]
+    if not classes:
+        raise AttributeError(f"no nn.Module subclass found for {name or default}")
+    wants_new = default == "ModelNew"
+    match = [c for c in classes if c.__name__.endswith("New") == wants_new]
+    return (match or classes)[-1]
+
+
 def _run_leak(a, res: dict) -> None:
     """Show that an unwritten output region returns memory that held other data.
 
@@ -547,12 +562,12 @@ def _run_leak(a, res: dict) -> None:
     get_init = getattr(ref, "get_init_inputs", None)
     init_args = list(get_init() or []) if get_init is not None else []
     torch.manual_seed(a.seed)
-    ref_model = ref.Model(*init_args)
+    ref_model = _pick_class(ref, a.ref_class, "Model")(*init_args)
     res["status"] = "importing"
     torch.manual_seed(a.seed)
     cand = _load_module(a.file, "cbu_target_module")
     torch.manual_seed(a.seed)
-    cand_model = cand.ModelNew(*init_args)
+    cand_model = _pick_class(cand, a.cand_class, "ModelNew")(*init_args)
     if a.model_mode == "eval":
         ref_model.eval()
         cand_model.eval()
@@ -724,7 +739,7 @@ def _run_kernelbench(a, res: dict) -> None:
     get_init = getattr(ref, "get_init_inputs", None)
     init_args = list(get_init() or []) if get_init is not None else []
     torch.manual_seed(a.seed)
-    ref_model = ref.Model(*init_args)
+    ref_model = _pick_class(ref, a.ref_class, "Model")(*init_args)
     if a.model_mode == "eval":
         ref_model.eval()
     torch.manual_seed(a.seed)
@@ -748,7 +763,7 @@ def _run_kernelbench(a, res: dict) -> None:
     cand = _load_module(a.file, "cbu_target_module")
     res["asan_log_bytes_at_import"] = _asan_log_bytes()
     torch.manual_seed(a.seed)
-    cand_model = cand.ModelNew(*init_args)
+    cand_model = _pick_class(cand, a.cand_class, "ModelNew")(*init_args)
     if a.model_mode == "eval":
         cand_model.eval()
     try:
@@ -808,6 +823,8 @@ def main() -> int:
     ap.add_argument("--dtype", default="float32")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--model-mode", choices=["eval", "train"], default="eval", help="KernelGYM leaves models in training mode")
+    ap.add_argument("--ref-class", default=None, help="kernelbench: reference class name when it is not Model")
+    ap.add_argument("--cand-class", default=None, help="kernelbench: candidate class name when it is not ModelNew")
     ap.add_argument("--leak-demo", type=int, default=0, help="kernelbench: plant a marker in freed memory this many times and count it in the output")
     ap.add_argument("--replay", type=int, default=0, help="kernelbench: replay this many KernelGYM correctness trials in one process")
     ap.add_argument("--no-shim", action="store_true", help="do not redirect CUDA device requests to the CPU")

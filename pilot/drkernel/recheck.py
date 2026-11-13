@@ -63,7 +63,8 @@ def main() -> int:
         entry = {"id": kid, "feedback": row.get("feedback"), "modes": {}}
         t0 = time.time()
         for mode in a.modes.split(","):
-            base = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": "native", "model_mode": mode}
+            base = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": "native", "model_mode": mode,
+                    "ref_class": row.get("ref_class"), "cand_class": row.get("cand_class")}
             m = {"configs": [], "replay": []}
             entry["modes"][mode] = m
             first = detect.run_plain(dict(base, autotune_index=0), timeout=a.timeout)
