@@ -14,6 +14,12 @@ on:
       detectors:
         description: "comma-separated detectors"
         default: "plain,bounds,asan,poison"
+      max_configs:
+        description: "autotune configs audited per kernel"
+        default: "4"
+      const_variants:
+        description: "nearby shapes per kernel, each one constant increased by one"
+        default: "0"
 
 permissions:
   contents: read
@@ -47,7 +53,7 @@ jobs:
         run: |
           timeout --signal=INT 330m python pilot/drkernel/run_pilot.py --data data/census.jsonl --shard ${{ matrix.shard }}/20 \
             --detectors "${{ inputs.detectors || 'plain,bounds,asan,poison' }}" --variants native \
-            --max-configs 4 --const-variants 0 --timeout 240 --budget 300 \
+            --max-configs "${{ inputs.max_configs || '4' }}" --const-variants "${{ inputs.const_variants || '0' }}" --timeout 240 --budget 300 \
             --out results/raw/census_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
       - uses: actions/upload-artifact@v4
         if: always()

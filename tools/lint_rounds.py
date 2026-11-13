@@ -29,6 +29,20 @@ import extract  # noqa: E402
 REPO = Path(__file__).resolve().parents[1]
 NON_SHAPE = {"num_warps", "num_stages", "num_ctas", "maxnreg"}
 
+# What the harness itself recorded when a round failed. These are records from real GPU runs.
+ERRORS = {
+    "illegal_memory_access": r"illegal memory access",
+    "device_side_assert": r"device-side assert",
+    "index_out_of_range": r"index out of range|out of bounds|IndexError",
+    "cuda_error_other": r"CUDA error",
+    "segfault": r"Segmentation fault|core dumped|SIGSEGV|signal 11",
+    "out_of_memory": r"out of memory|OutOfResources",
+    "timeout": r"[Tt]imed? ?out",
+    "shape_mismatch": r"shape mismatch|Output shape",
+    "output_mismatch": r"Output mismatch|max_difference",
+    "nan_or_inf": r"\bnan\b|\binf\b",
+}
+
 
 def features(code: str) -> dict:
     f: dict = {"parse_ok": True, "autotune": False, "n_configs": 0, "tunables": {}, "launch_static": 0, "launch_callable": 0,
@@ -113,6 +127,7 @@ def main() -> int:
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
+    examples: list = []
     with gzip.open(out_dir / "lint_rounds.jsonl.gz", "wt") as fo:
         for i, row in enumerate(ds):
             if a.limit and i >= a.limit:
@@ -128,6 +143,12 @@ def main() -> int:
                        "compiled": fb.get("compiled"), "correct": fb.get("correctness"), "decoy": fb.get("decoy_kernel"),
                        "speedup": fb.get("speedup"), "trials": fb.get("correct_trials"), "status": fb.get("status"), **f}
                 rec["accepted"] = bool(rec["compiled"] and rec["correct"] and rec["decoy"] is False)
+                raw = row["messages"][2 * x["round"]]["content"] if 2 * x["round"] < len(row["messages"]) else ""
+                rec["err"] = [k for k, pat in ERRORS.items() if re.search(pat, raw)] if x["feedback"] else []
+                if "illegal_memory_access" in rec["err"] or "device_side_assert" in rec["err"]:
+                    m = re.search(ERRORS["illegal_memory_access"] + "|" + ERRORS["device_side_assert"], raw)
+                    if len(examples) < 25:
+                        examples.append({"id": f"{rec['uuid']}:{rec['round']}", "text": raw[max(0, m.start() - 160): m.end() + 80]})
                 rows.append(rec)
                 fo.write(json.dumps(rec) + "\n")
 
@@ -182,6 +203,19 @@ def main() -> int:
         d = sum(1 for r in sel if r["decoy"])
         L.append(f"| {label} | {len(sel)} | {wilson(d, len(sel))} |")
         S["decoy"][label] = {"n": len(sel), "decoy": d}
+
+    # Errors the harness recorded on a real GPU.
+    L.append("\n### Errors recorded by the harness, among rounds with feedback\n")
+    L.append("| Recorded error | Rounds | Of those accepted | With L1 | With autotune |\n|---|---|---|---|---|")
+    S["errors"] = {}
+    for key in ERRORS:
+        sel = [r for r in fb_rows if key in r["err"]]
+        L.append(f"| {key} | {wilson(len(sel), len(fb_rows))} | {sum(1 for r in sel if r['accepted'])} | {sum(1 for r in sel if r['L1'])} | {sum(1 for r in sel if r['autotune'])} |")
+        S["errors"][key] = {"n": len(sel), "accepted": sum(1 for r in sel if r["accepted"])}
+    mem = sorted({f"{r['uuid']}:{r['round']}" for r in fb_rows if "illegal_memory_access" in r["err"] or "device_side_assert" in r["err"] or "segfault" in r["err"]})
+    S["gpu_memory_error_rounds"] = mem
+    S["gpu_memory_error_examples"] = examples
+    L.append(f"\nRounds where the GPU run recorded an illegal memory access, a device-side assert or a segmentation fault: {len(mem)}.")
 
     # Accepted best-round population and the census triage.
     best = [r for r in rows if r["has_feedback"] and r["accepted"] and r["round"] == r["best_round"]]

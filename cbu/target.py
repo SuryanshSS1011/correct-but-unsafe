@@ -385,6 +385,9 @@ def _bounds_oracle() -> dict:
         def call(self, *args, **kwargs):
             ranges, base_of = [], {}
             for v in list(args) + list(kwargs.values()):
+                # triton.reinterpret wraps a tensor in an object that keeps it as .base
+                if not isinstance(v, torch.Tensor) and isinstance(getattr(v, "base", None), torch.Tensor):
+                    v = v.base
                 if isinstance(v, torch.Tensor) and v.numel():
                     st = v.untyped_storage()
                     r = (int(st.data_ptr()), int(st.data_ptr()) + int(st.nbytes()))

@@ -60,8 +60,9 @@ jobs:
           if [ "$KERNELS" = "flagged" ]; then
             KERNELS=$(python -c "import json;t=json.load(open('results/triage-census.json'));ids=list(t['out_of_bounds_read'])+list(t['uninitialized_output_source_read'])+t['uninitialized_output_pattern_only']+list(t['false_positive']);print(','.join(i.replace('_r',':') for i in sorted(ids)))")
           fi
-          if [ "$KERNELS" = "l1_accepted" ] || [ "$KERNELS" = "l1_rejected_1of5" ]; then
-            KERNELS=$(python -c "import json,sys;print(','.join(json.load(open('results/lint_summary.json'))[sys.argv[1]+('_rounds' if sys.argv[1]=='l1_accepted' else '')]))" "$KERNELS")
+          if echo "$KERNELS" | grep -qv ':'; then
+            # a name without a colon is a list stored in results/lint_summary.json
+            KERNELS=$(python -c "import json,sys;S=json.load(open('results/lint_summary.json'));k=sys.argv[1];print(','.join(S.get(k) or S[k+'_rounds']))" "$KERNELS")
           fi
           python tools/dump_kernels.py --kernels "$KERNELS" --out data/recheck.jsonl
       - name: Recheck shard ${{ matrix.shard }}
