@@ -93,6 +93,14 @@ def _digest(tensors) -> dict:
     return {"sha256": h.hexdigest(), "shapes": shapes, "nan": nan, "inf": inf}
 
 
+def _poison_report(res: dict, outs: list, inputs: list) -> None:
+    if "poison" not in res:
+        return
+    from cbu import poison
+
+    res["poison"].update({"output": poison.count(outs), "inputs_after": poison.count(inputs), **poison.stats()})
+
+
 TILELENS_LAUNCHES = {"n": 0}
 
 
@@ -308,6 +316,7 @@ def _run_tritongym(a, res: dict) -> None:
     _flatten(out, outs)
     res["output"] = _digest(outs)
     res["inputs_after"] = _digest(list(args))
+    _poison_report(res, outs, list(args))
 
 
 def _run_kernelbench(a, res: dict) -> None:
@@ -315,6 +324,8 @@ def _run_kernelbench(a, res: dict) -> None:
 
     res["status"] = "reference"
     ref_path = _perturbed_reference(a.ref_file, a.variant, res)
+    # Some references build their inputs at import time, so the seed has to come first.
+    torch.manual_seed(a.seed)
     ref = _load_module(ref_path, "cbu_reference_module")
     torch.manual_seed(a.seed)
     get_init = getattr(ref, "get_init_inputs", None)
@@ -331,7 +342,9 @@ def _run_kernelbench(a, res: dict) -> None:
         inputs = _vary_batch(inputs, a.variant)
     res["input_shapes"] = [[str(x.dtype), list(x.shape)] if isinstance(x, torch.Tensor) else type(x).__name__ for x in inputs]
 
+    res["inputs_before"] = _digest([x for x in inputs if isinstance(x, torch.Tensor)])
     res["status"] = "importing"
+    torch.manual_seed(a.seed)
     cand = _load_module(a.file, "cbu_target_module")
     res["asan_log_bytes_at_import"] = _asan_log_bytes()
     torch.manual_seed(a.seed)
@@ -351,12 +364,17 @@ def _run_kernelbench(a, res: dict) -> None:
     _flatten(out, outs)
     res["output"] = _digest(outs)
     res["inputs_after"] = _digest([x for x in cand_inputs if isinstance(x, torch.Tensor)])
+    _poison_report(res, outs, cand_inputs)
     res["status"] = "comparing"
     try:
         with torch.no_grad():
             ref_out = ref_model(*ref_inputs)
         refs: list = []
         _flatten(ref_out, refs)
+        if "poison" in res:
+            from cbu import poison
+
+            res["poison"]["reference"] = poison.count(refs)
         cmp = {"n_out": len(outs), "n_ref": len(refs), "shape_match": [list(o.shape) for o in outs] == [list(r.shape) for r in refs]}
         if cmp["shape_match"] and outs:
             diffs, close = [], True
@@ -405,6 +423,11 @@ def main() -> int:
 
             cpu_shim.install(pretend_cuda=not a.no_pretend_cuda)
             res["cpu_shim"] = "pretend_cuda" if not a.no_pretend_cuda else "redirect_only"
+        if os.environ.get("CBU_POISON") == "1":
+            from cbu import poison
+
+            poison.install()
+            res["poison"] = {}
         launches = _count_kernel_launches()
         if a.mode == "tilelens":
             clients = _install_tilelens()

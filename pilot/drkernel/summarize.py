@@ -82,6 +82,8 @@ def classify(kernel: dict) -> dict:
                 d["reports"] = [{"op": x.get("op"), "tensor": x.get("tensor_name"), "line": (x.get("traceback") or [{}])[0].get("line_of_code")} for x in ((r.get("result") or {}).get("tilelens_records") or [])[:4]]
             elif det == "perturb":
                 d["unstable"], d["fill_dependent"], d["crashed"] = r.get("unstable"), r.get("fill_dependent"), r.get("crashed")
+            elif det == "poison":
+                d["unwritten"], d["unwritten_fraction"], d["derived_nan"] = r.get("unwritten"), r.get("unwritten_fraction"), r.get("derived_nan")
             elif det == "plain":
                 d["signal"] = r.get("crash_signal")
             out["details"].append(d)
@@ -105,9 +107,15 @@ def main(argv: list[str]) -> int:
     m = [r for r in aud if r["matches_ref_native"] is not None]
     print(f"- Auditable kernels whose CPU output matches the reference within 1e-2: {pct(sum(1 for r in m if r['matches_ref_native']), len(m))}.")
     print(f"- Flagged by at least one detector: {pct(len(flagged), len(aud))}.")
-    for det in ("plain", "tilelens", "asan", "perturb"):
+    for det in ("plain", "tilelens", "asan", "perturb", "poison"):
         k = sum(1 for r in aud if det in r["flags"])
         print(f"  - {det}: {pct(k, len(aud))}")
+    concrete = [r for r in aud if any(d in r["flags"] for d in ("plain", "asan", "perturb", "poison"))]
+    symbolic_only = [r for r in flagged if set(r["flags"]) == {"tilelens"}]
+    uninit = [r for r in aud if any(d in r["flags"] for d in ("perturb", "poison"))]
+    print(f"- Flagged by a concrete detector (plain crash, asan, perturb or poison): {pct(len(concrete), len(aud))}.")
+    print(f"- Flagged by the symbolic detector alone, which needs manual triage: {len(symbolic_only)}.")
+    print(f"- Uninitialized-memory signal (perturb or poison): {pct(len(uninit), len(aud))}.")
     oob = [r for r in aud if any(d in r["flags"] for d in ("tilelens", "asan", "plain"))]
     both = [r for r in aud if "tilelens" in r["flags"] and "asan" in r["flags"]]
     print(f"- Out-of-bounds signal (plain crash, tilelens or asan): {pct(len(oob), len(aud))}.")
@@ -140,6 +148,8 @@ def main(argv: list[str]) -> int:
         "flagged": len(flagged),
         "exclusions": dict(excl),
         "flagged_kernels": [{"id": r["id"], "uuid": r["meta"].get("uuid"), "round": r["meta"].get("round"), "final_speedup": r["meta"].get("final_speedup"), "flags": r["flags"], "details": r["details"], "matches_ref_native": r["matches_ref_native"], "verifier": r["meta"].get("verifier")} for r in flagged],
+        "concrete_flagged": [r["id"] for r in concrete],
+        "symbolic_only": [r["id"] for r in symbolic_only],
         "nearby_shape_outcomes": dict(nearby),
         "config_mismatch_kernels": [r["id"] for r in cfgm],
         "nearby_wrong_kernels": [r["id"] for r in aud if (r.get("nearby") or {}).get("silently wrong") or (r.get("nearby") or {}).get("crash")],

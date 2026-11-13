@@ -8,7 +8,7 @@ maintainer considers repaired.
 
 Usage:
     python controls/tritongym/run_control.py --checkout ext/tritongym_pre \
-        --label pre --detectors plain,tilelens,asan,perturb --out results/pre.json
+        --label pre --detectors plain,tilelens,asan,perturb,poison --out results/pre.json
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def main() -> int:
     ap.add_argument("--label", required=True)
     ap.add_argument("--dataset", default="data_v2")
     ap.add_argument("--ops", default="known", help="'known', 'all', or a comma-separated list")
-    ap.add_argument("--detectors", default="plain,tilelens,asan,perturb")
+    ap.add_argument("--detectors", default="plain,tilelens,asan,perturb,poison")
     ap.add_argument("--shard", default="0/1", help="i/n: run ops whose index mod n equals i")
     ap.add_argument("--max-cases", type=int, default=2)
     ap.add_argument("--dtypes", default="float16,float32", help="TritonGym feeds float16 on GPU and float32 on CPU")

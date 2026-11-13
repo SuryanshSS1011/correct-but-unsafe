@@ -46,7 +46,7 @@ jobs:
           python controls/tritongym/run_control.py \
             --checkout ext/tritongym --label "sweep-${{ inputs.commit || '5d64634' }}" \
             --ops all --shard ${{ matrix.shard }}/8 --dtypes float16,float32 \
-            --detectors plain,tilelens,asan,perturb \
+            --detectors plain,tilelens,asan,perturb,poison \
             --out results/raw/sweep_shard${{ matrix.shard }}.json
       - name: Summarize
         if: always()

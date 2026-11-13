@@ -32,7 +32,7 @@ def main() -> int:
     ap.add_argument("--work", default="work/drkernel")
     ap.add_argument("--shard", default="0/1")
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--detectors", default="plain,tilelens,asan,perturb")
+    ap.add_argument("--detectors", default="plain,tilelens,asan,perturb,poison")
     ap.add_argument("--variants", default="native,batch3")
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--max-configs", type=int, default=6, help="audit at most this many autotune configs per kernel")
@@ -90,7 +90,7 @@ def main() -> int:
                 print(f"{kid} {run['variant']} {det}: flagged={r.get('flagged')} status={res.get('status')} launches={res.get('kernel_launches')} t={r['wall_seconds']}s", flush=True)
                 if det == "plain":
                     if res.get("status") == "ok":
-                        spec["baseline"] = {"out": (res.get("output") or {}).get("sha256"), "inp": (res.get("inputs_after") or {}).get("sha256"), "nan": (res.get("output") or {}).get("nan")}
+                        spec["baseline"] = {"out": (res.get("output") or {}).get("sha256"), "inp": (res.get("inputs_after") or {}).get("sha256"), "inp0": (res.get("inputs_before") or {}).get("sha256"), "nan": (res.get("output") or {}).get("nan")}
                     failed = res.get("status") != "ok" and r.get("crash_signal") is None
                     if (variant, cfg) == ("native", 0):
                         # A kernel that cannot run natively on CPU is an exclusion. Skip its other variants.

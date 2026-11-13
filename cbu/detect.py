@@ -192,7 +192,7 @@ def run_perturb(spec: dict, timeout: int = 600, fills: tuple[int, int] = (85, 17
     baseline = spec.get("baseline")
     if baseline and baseline.get("out"):
         # The caller already has one unperturbed run. Reuse it and save a subprocess.
-        runs["base_a"] = {"status": "ok", "returncode": 0, "timeout": False, "out": baseline.get("out"), "inp": baseline.get("inp"), "nan": baseline.get("nan"), "exception": None, "reused": True}
+        runs["base_a"] = {"status": "ok", "returncode": 0, "timeout": False, "out": baseline.get("out"), "inp": baseline.get("inp"), "inp0": baseline.get("inp0"), "nan": baseline.get("nan"), "exception": None, "reused": True}
         plan = plan[1:]
     for label, env in plan:
         env = dict(env, TRITON_INTERPRET="1")
@@ -205,6 +205,7 @@ def run_perturb(spec: dict, timeout: int = 600, fills: tuple[int, int] = (85, 17
             "timeout": x.get("timeout"),
             "out": (res.get("output") or {}).get("sha256"),
             "inp": (res.get("inputs_after") or {}).get("sha256"),
+            "inp0": (res.get("inputs_before") or {}).get("sha256"),
             "nan": (res.get("output") or {}).get("nan"),
             "exception": res.get("exception"),
         }
@@ -212,13 +213,17 @@ def run_perturb(spec: dict, timeout: int = 600, fills: tuple[int, int] = (85, 17
     fa, fb = runs[f"fill_{fills[0]}"], runs[f"fill_{fills[1]}"]
     statuses = sorted({str(v["status"]) for v in runs.values()})
     ok = all(v["status"] == "ok" for v in runs.values())
+    # The comparison only means something when every run started from the same inputs.
+    starts = {v.get("inp0") for v in runs.values() if v.get("inp0")}
+    same_inputs = len(starts) <= 1
     # Identical runs that disagree mean the output depends on memory the inputs do not define.
-    unstable = ok and (a["out"] != b["out"] or a["inp"] != b["inp"])
-    fill_dependent = ok and not unstable and (fa["out"] != fb["out"] or fa["inp"] != fb["inp"] or fa["out"] != a["out"])
+    unstable = ok and same_inputs and (a["out"] != b["out"] or a["inp"] != b["inp"])
+    fill_dependent = ok and same_inputs and not unstable and (fa["out"] != fb["out"] or fa["inp"] != fb["inp"] or fa["out"] != a["out"])
     crashed = any(v["returncode"] not in (0, None) for v in runs.values())
     return {
         "runs": runs,
         "all_ok": ok,
+        "same_inputs": bool(same_inputs),
         "unstable": bool(unstable),
         "fill_dependent": bool(fill_dependent),
         "crashed": bool(crashed),
@@ -227,4 +232,24 @@ def run_perturb(spec: dict, timeout: int = 600, fills: tuple[int, int] = (85, 17
     }
 
 
-DETECTORS = {"plain": run_plain, "tilelens": run_tilelens, "asan": run_asan, "perturb": run_perturb}
+def run_poison(spec: dict, timeout: int = 600) -> dict:
+    """Run with every uninitialized PyTorch allocation filled with a fixed pattern and count what survives."""
+    r = _run(spec, "plain", {"TRITON_INTERPRET": "1", "CBU_POISON": "1"}, timeout)
+    r.pop("_stderr", None)
+    res = r.get("result") or {}
+    p = res.get("poison") or {}
+    out, inp, ref = p.get("output") or {}, p.get("inputs_after") or {}, p.get("reference") or {}
+    base_nan = (spec.get("baseline") or {}).get("nan")
+    # A reference that itself returns poison or NaN cannot serve as the clean side of the comparison.
+    ref_clean = not ref or (ref.get("unwritten", 0) == 0 and ref.get("nan", 0) == 0)
+    unwritten = int(out.get("unwritten", 0)) + int(inp.get("unwritten", 0))
+    derived_nan = max(0, int(out.get("nan", 0)) - int(base_nan or 0)) if base_nan is not None else 0
+    r["unwritten"] = unwritten
+    r["unwritten_fraction"] = round(out.get("unwritten", 0) / out["elements"], 6) if out.get("elements") else None
+    r["derived_nan"] = derived_nan
+    r["reference_clean"] = bool(ref_clean)
+    r["flagged"] = bool(res.get("status") == "ok" and ref_clean and (unwritten > 0 or derived_nan > 0))
+    return r
+
+
+DETECTORS = {"plain": run_plain, "tilelens": run_tilelens, "asan": run_asan, "perturb": run_perturb, "poison": run_poison}
