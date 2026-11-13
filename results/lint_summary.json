@@ -3845,5 +3845,171 @@
   "995:3",
   "998:2"
  ],
- "rejected_compiled_population": 11234
+ "rejected_compiled_population": 11234,
+ "errors": {
+  "illegal_memory_access": {
+   "n": 21,
+   "accepted": 0
+  },
+  "device_side_assert": {
+   "n": 23,
+   "accepted": 0
+  },
+  "index_out_of_range": {
+   "n": 47,
+   "accepted": 0
+  },
+  "cuda_error_other": {
+   "n": 23,
+   "accepted": 0
+  },
+  "segfault": {
+   "n": 0,
+   "accepted": 0
+  },
+  "out_of_memory": {
+   "n": 12,
+   "accepted": 0
+  },
+  "timeout": {
+   "n": 429,
+   "accepted": 0
+  },
+  "shape_mismatch": {
+   "n": 45,
+   "accepted": 0
+  },
+  "output_mismatch": {
+   "n": 1606,
+   "accepted": 0
+  },
+  "nan_or_inf": {
+   "n": 562,
+   "accepted": 0
+  }
+ },
+ "gpu_memory_error_rounds": [
+  "1011:3",
+  "1571:3",
+  "1589:1",
+  "1907:4",
+  "2036:3",
+  "2095:1",
+  "2095:3",
+  "2095:4",
+  "2229:3",
+  "236:3",
+  "2452:2",
+  "2794:3",
+  "3231:4",
+  "3725:4",
+  "4033:3",
+  "481:3",
+  "5194:2",
+  "5668:1",
+  "5758:2",
+  "6133:2",
+  "6909:1",
+  "7029:2",
+  "7499:1",
+  "7855:1"
+ ],
+ "gpu_memory_error_examples": [
+  {
+   "id": "236:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "481:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "1011:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "1571:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "1589:1",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "1907:4",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2036:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2095:1",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2095:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2095:4",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2229:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "2452:2",
+   "text": "s int32\\n cx = tl.load(x_ptr + offs, mask=mask, other=0)\\n cy = tl.load(y_ptr + offs, mask=mask, other=0)\\n\\n # Clamp to valid range [0, C-1] to avoid illegal memory access\\n cx = tl.max(tl.min(cx, C - 1), 0)\\n ^\\n\", \"runtime_error_na"
+  },
+  {
+   "id": "2794:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "3231:4",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "3725:4",
+   "text": "other API call, so the stacktrace below might be incorrect.\\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\\n\", \"error_code\": \"RUNTIME_ERROR\", \"submitted_at\": null, \"completed_at\": n"
+  },
+  {
+   "id": "4033:3",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "5194:2",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "5668:1",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "5758:2",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "6133:2",
+   "text": "other API call, so the stacktrace below might be incorrect.\\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\\n\", \"error_code\": \"RUNTIME_ERROR\", \"submitted_at\": null, \"completed_at\": n"
+  },
+  {
+   "id": "6909:1",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "7029:2",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "7499:1",
+   "text": "eference_runtime\": null, \"kernel_runtime\": null, \"speedup\": null, \"metadata\": {\"ref_skipped\": true}, \"error_message\": \"Kernel evaluation failed: CUDA error: an illegal memory access was encountered\\nCUDA kernel errors might be asynchronously reported at some ot"
+  },
+  {
+   "id": "7855:1",
+   "text": "other API call, so the stacktrace below might be incorrect.\\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\\n\", \"error_code\": \"RUNTIME_ERROR\", \"submitted_at\": null, \"completed_at\": n"
+  }
+ ]
 }

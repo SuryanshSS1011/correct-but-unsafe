@@ -31,6 +31,23 @@
 | Mentions self.training | 563 | 32 of 563, 5.7% (4.1 to 7.9) |
 | No mention | 34618 | 1959 of 34618, 5.7% (5.4 to 5.9) |
 
+### Errors recorded by the harness, among rounds with feedback
+
+| Recorded error | Rounds | Of those accepted | With L1 | With autotune |
+|---|---|---|---|---|
+| illegal_memory_access | 21 of 35680, 0.1% (0.0 to 0.1) | 0 | 4 | 9 |
+| device_side_assert | 23 of 35680, 0.1% (0.0 to 0.1) | 0 | 4 | 9 |
+| index_out_of_range | 47 of 35680, 0.1% (0.1 to 0.2) | 0 | 1 | 2 |
+| cuda_error_other | 23 of 35680, 0.1% (0.0 to 0.1) | 0 | 4 | 9 |
+| segfault | 0 of 35680, 0.0% (0.0 to 0.0) | 0 | 0 | 0 |
+| out_of_memory | 12 of 35680, 0.0% (0.0 to 0.1) | 0 | 0 | 3 |
+| timeout | 429 of 35680, 1.2% (1.1 to 1.3) | 0 | 47 | 148 |
+| shape_mismatch | 45 of 35680, 0.1% (0.1 to 0.2) | 0 | 3 | 3 |
+| output_mismatch | 1606 of 35680, 4.5% (4.3 to 4.7) | 0 | 675 | 976 |
+| nan_or_inf | 562 of 35680, 1.6% (1.5 to 1.7) | 0 | 46 | 96 |
+
+Rounds where the GPU run recorded an illegal memory access, a device-side assert or a segmentation fault: 24.
+
 ### Accepted best-round population: 6230 kernels
 
 - autotune: 1418 of 6230, 22.8% (21.7 to 23.8)
