@@ -29,12 +29,13 @@ def flagged() -> str:
     return ",".join(i.replace("_r", ":") for i in sorted(ids))
 
 
-def run(cand: Path, ref: Path, mode: str, poison: bool, interpret: bool, timeout: int) -> dict:
+def run(cand: Path, ref: Path, mode: str, poison: bool, interpret: bool, timeout: int, leak: bool = False) -> dict:
     env = dict(os.environ, PYTHONPATH=str(REPO), PYTHONDONTWRITEBYTECODE="1")
     env["CBU_POISON"] = "1" if poison else "0"
     if interpret:
-        env.update(TRITON_INTERPRET="1", CBU_AUTOTUNE_INDEX="tune:0")
-    cmd = [sys.executable, "-m", "cbu.target", "--adapter", "kernelbench", "--file", str(cand), "--ref-file", str(ref), "--replay", "5", "--model-mode", mode]
+        env.update(TRITON_INTERPRET="1", CBU_AUTOTUNE_INDEX="0" if leak else "tune:0")
+    cmd = [sys.executable, "-m", "cbu.target", "--adapter", "kernelbench", "--file", str(cand), "--ref-file", str(ref), "--model-mode", mode]
+    cmd += ["--leak-demo", "3"] if leak else ["--replay", "5"]
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, cwd=str(REPO))
     except subprocess.TimeoutExpired:
@@ -43,6 +44,10 @@ def run(cand: Path, ref: Path, mode: str, poison: bool, interpret: bool, timeout
     if line is None:
         return {"returncode": p.returncode, "stderr": p.stderr[-600:]}
     res = json.loads(line[len("CBU_JSON:"):])
+    if leak:
+        lk = res.get("leak") or {}
+        return {"status": res.get("status"), "exception": (str(res.get("exception"))[:200] if res.get("exception") else None),
+                "device": lk.get("device"), "leak_trials": lk.get("trials")}
     rp = res.get("replay") or {}
     return {"status": res.get("status"), "exception": (str(res.get("exception"))[:200] if res.get("exception") else None),
             "device": rp.get("device"), "trials": rp.get("trials"), "autotuned": rp.get("autotuned")}
@@ -82,6 +87,14 @@ def main() -> int:
                     win = [(t.get("kernel"), t.get("winner_index")) for t in (r.get("autotuned") or [])]
                     print(f"{kid} {mode} poison={int(poison)} rep={rep}: launches={[t.get('launches') for t in tr]} unwritten={[t.get('unwritten') for t in tr]} "
                           f"allclose={[t.get('allclose') for t in tr]} winner={win} {r.get('exception') or ''}", flush=True)
+            # Marker test: does the unwritten part of the output return memory that held other data?
+            for rep in range(a.repeats):
+                r = run(d / "cand.py", d / "ref.py", mode, False, a.interpret, a.timeout, leak=True)
+                r.update(mode=mode, leak=True, repeat=rep)
+                entry["runs"].append(r)
+                lt = r.get("leak_trials") or []
+                print(f"{kid} {mode} marker test rep={rep}: marker elements in output={[t.get('leaked') for t in lt]} of {[t.get('elements') for t in lt][:1]} "
+                      f"allclose={[t.get('allclose') for t in lt]} {r.get('exception') or ''}", flush=True)
         results.append(entry)
         out_path.write_text(json.dumps({"kernels": results}, indent=1))
     print(f"wrote {out_path}")

@@ -4,6 +4,9 @@ Everything in the rest of this repository runs on CPU. These two scripts are
 the only part that needs a GPU. They have been dry-run on the CPU interpreter
 and have not yet been run on a GPU.
 
+The kernels they execute are model-generated code from a public corpus. Run
+them in a container or a batch job, not in a session that holds credentials.
+
 Any CUDA GPU works, including a free Colab T4. Both scripts together should
 take well under one hour.
 
@@ -45,6 +48,15 @@ with and without the poison fill, in a fresh process per repeat. Results go to
 1. Whether the CPU findings hold in compiled form. With the poison fill, a trial with unwritten elements confirms the defect.
 2. Which autotune config wins for each kernel on real hardware.
 3. Whether stale allocator memory hides the defect. That is the case when a trial has unwritten elements with the poison fill and still passes without it.
+
+4. Whether the unwritten region returns memory that held other data. Before each call the marker test creates and frees a tensor of the output's size filled with the value 1027. Output elements equal to 1027 came from that freed block. On the CPU interpreter, 6,144 of 8,192 output elements of `984_r2` and 64 of 128 of `4191_r4` returned the marker.
+
+## Launchers
+
+1. **Modal:** `modal run gpu/modal_app.py`. Set `CBU_GPU=T4` or another type to compare GPUs.
+2. **Roar:** fill in the account and partition in `gpu/roar.sbatch`, do the setup on a login node as its header describes, then `sbatch gpu/roar.sbatch`.
+
+Neither launcher has been run. Running on two GPU types is useful, because the winning autotune config can differ between them.
 
 ## Optional: NVIDIA Compute Sanitizer
 

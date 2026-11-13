@@ -524,6 +524,75 @@ def _run_replay(a, res: dict) -> None:
     res["replay"]["device"] = torch.cuda.get_device_name(0) if on_gpu and not res.get("cpu_shim") else "cpu-interpreter"
 
 
+def _run_leak(a, res: dict) -> None:
+    """Show that an unwritten output region returns memory that held other data.
+
+    Before each call a marker tensor with the output's size is created and
+    freed, which stands in for an earlier request's data. The kernel then runs
+    on unrelated input. Output elements equal to the marker were never written
+    by the kernel and came from the freed block.
+    """
+    import gc
+
+    import torch
+
+    marker = 1027.0  # an integer that half precision represents exactly, so rounding or a cast leaves it intact
+    res["status"] = "reference"
+    torch.manual_seed(a.seed)
+    ref = _load_module(a.ref_file, "cbu_reference_module")
+    torch.manual_seed(a.seed)
+    get_init = getattr(ref, "get_init_inputs", None)
+    init_args = list(get_init() or []) if get_init is not None else []
+    torch.manual_seed(a.seed)
+    ref_model = ref.Model(*init_args)
+    res["status"] = "importing"
+    torch.manual_seed(a.seed)
+    cand = _load_module(a.file, "cbu_target_module")
+    torch.manual_seed(a.seed)
+    cand_model = cand.ModelNew(*init_args)
+    if a.model_mode == "eval":
+        ref_model.eval()
+        cand_model.eval()
+    on_gpu = bool(torch.cuda.is_available())
+    real_gpu = on_gpu and not res.get("cpu_shim")
+    if on_gpu:
+        ref_model, cand_model = ref_model.cuda(), cand_model.cuda()
+
+    def fresh(k: int) -> list:
+        torch.manual_seed(1000 + k)
+        xs = list(ref.get_inputs())
+        return [x.cuda() if on_gpu and isinstance(x, torch.Tensor) else x for x in xs]
+
+    trials: list = []
+    res["leak"] = {"model_mode": a.model_mode, "marker": marker, "trials": trials}
+    res["status"] = "running"
+    with torch.no_grad():
+        outs: list = []
+        _flatten(cand_model(*fresh(0)), outs)  # the first call also runs any autotuning
+        specs = [(tuple(o.shape), o.dtype, o.device) for o in outs if o.is_floating_point() and o.numel()]
+        del outs
+        for k in range(a.leak_demo):
+            inputs = fresh(k + 1)
+            gc.collect()
+            if real_gpu:
+                torch.cuda.empty_cache()
+            planted = [torch.full(shape, marker, dtype=dtype, device=device) for shape, dtype, device in specs]
+            del planted
+            gc.collect()
+            outs = []
+            _flatten(cand_model(*inputs), outs)
+            refs: list = []
+            _flatten(ref_model(*inputs), refs)
+            same = [list(x.shape) for x in outs] == [list(x.shape) for x in refs]
+            trials.append({
+                "leaked": sum(int((o == marker).sum()) for o in outs if o.is_floating_point()),
+                "elements": sum(o.numel() for o in outs),
+                "allclose": bool(same and all(torch.allclose(x, y, atol=1e-2, rtol=1e-2) for x, y in zip(refs, outs))),
+            })
+            del outs, refs
+    res["leak"]["device"] = torch.cuda.get_device_name(0) if real_gpu else "cpu-interpreter"
+
+
 def _vary_batch(inputs: list, variant: str) -> list:
     """Change the leading dimension shared by the tensor inputs. Used as a cheap shape perturbation."""
     import torch
@@ -736,6 +805,7 @@ def main() -> int:
     ap.add_argument("--dtype", default="float32")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--model-mode", choices=["eval", "train"], default="eval", help="KernelGYM leaves models in training mode")
+    ap.add_argument("--leak-demo", type=int, default=0, help="kernelbench: plant a marker in freed memory this many times and count it in the output")
     ap.add_argument("--replay", type=int, default=0, help="kernelbench: replay this many KernelGYM correctness trials in one process")
     ap.add_argument("--no-shim", action="store_true", help="do not redirect CUDA device requests to the CPU")
     ap.add_argument("--no-pretend-cuda", action="store_true", help="keep is_cuda and device truthful, so CUDA-guarded wrappers fall back")
@@ -775,6 +845,8 @@ def main() -> int:
         res["status"] = "importing"
         if a.adapter == "tritongym":
             _run_tritongym(a, res)
+        elif a.leak_demo:
+            _run_leak(a, res)
         elif a.replay:
             _run_replay(a, res)
         else:
