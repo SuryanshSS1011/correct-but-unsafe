@@ -4,9 +4,9 @@ This document records what the study has established, what is still open, and
 which decisions follow. Its purpose is to make sure no large amount of compute
 or time is spent before the analysis behind it is done. It supersedes the go
 and no-go rules of the December plan. Numbers come from the
-files in `results/`. Entries marked **pending** depend on runs that were still
-in progress when this was written, and section 6 says how each pending number
-would change a decision.
+files in `results/`. Section 6 records how the numbers that were pending
+settled each decision rule. A few runs were still in progress when this was
+written, and each is named where it matters.
 
 ## 1. What is established
 
@@ -43,10 +43,10 @@ source reading only. Grade C means inference.
 | 1 | How often does a partial config win on a given GPU, and does stale allocator memory ever make a partial write pass? | `gpu/minimal_repro.py` and `gpu/confirm.py`. | About one hour on any CUDA GPU, including a free Colab T4. |
 | 2 | How many accepted rounds of any index have at least one partial config? | 105 of the 1,272 that ran in the first 1,294 of 1,725. The remaining shards were still running. | Answered in part. |
 | 3 | Is the 1-of-5 signature really the partial-write defect? | Yes. 315 of 332 have a partial config. | Answered. |
-| 7 | Why do four kernels crash on a GPU and run clean on CPU? | Run `236:3`, `481:3`, `3725:4` and `6133:2` on a GPU with `CUDA_LAUNCH_BLOCKING=1`. The cause is either a difference between the interpreter and compiled code, or a CUDA error carried over from another kernel in the same worker. | Minutes on a GPU. |
 | 4 | Does the rate hold outside this corpus? | Two corpora were approved. The traces corpus has 207 rows, never uses autotuning and calls kernels through a wrapper function, so it was not audited. The Makora corpus has 544,028 programs in the same format as KernelBench, and a sample of 1,500 is running. | Free CI. No generation cost. |
 | 5 | How many more kernels fail at a nearby shape? | A population run with shape constants increased by one. The pilot found 2 more partial writes in 298 kernels. | Free CI, about four hours. |
-| 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 27 rechecked kernels, 2 behave differently between modes. | Low impact. No action. |
+| 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 36 rechecked kernels, 3 behave differently between modes. | Low impact. No action. |
+| 7 | Why do four kernels crash on a GPU and run clean on CPU? | Run `236:3`, `481:3`, `3725:4` and `6133:2` on a GPU with `CUDA_LAUNCH_BLOCKING=1`. The cause is either a difference between the interpreter and compiled code, or a CUDA error carried over from another kernel in the same worker. | Minutes on a GPU. |
 
 ## 4. Decisions
 
@@ -79,8 +79,8 @@ source reading only. Grade C means inference.
 |---|---|
 | The interpreter differs from compiled code. | Three divergences were found and handled: `and` and `or` on tensors, atomic operations invisible to the sanitizer, and import-time self-tests. The GPU kit is the remaining check. |
 | A preloaded sanitizer misses accesses that land in another allocation. | The bounds oracle tracks which allocation each pointer came from and does not depend on the allocator. |
-| Nineteen census kernels were classified by signature and not read. | The recheck confirmed a partial config for all 21 uninitialized-output kernels it has finished, so the classification no longer rests on the signature alone. Nine kernels with large inputs were still running. |
-| The harness ran in a different mode from the audit. | Rechecked in both modes. Two of 27 differ, because their kernel does not launch in training mode. |
+| Nineteen census kernels were classified by signature and not read. | The recheck confirmed a partial config for all 29 uninitialized-output kernels, so the classification no longer rests on the signature alone. |
+| The harness ran in a different mode from the audit. | Rechecked in both modes. Three of 36 differ, because their kernel does not launch in training mode. |
 | The static rule over-approximates. | It marks kernels whose tuned parameter is consumed by a loop inside the kernel, including four human-written TritonBench references that are safe. Only the dynamic check per config counts as a finding. |
 | 117 kernels could not be audited. | 102 are timeouts on large inputs. They are 1.9% of the population and are reported as exclusions. |
 | One corpus from one model family. | Open. The Makora audit is running. See D4. |
@@ -96,8 +96,7 @@ source reading only. Grade C means inference.
 ## 7. Order of work for the next two weeks
 
 1. Run the GPU kit, including the four kernels of open question 7. One hour.
-2. Fold the pending recheck numbers into `results/` and into this document.
-3. Review and file the TritonGym report.
-4. Run the static L1 scan on two public Triton corpora.
-5. Run the nearby-shape population check with named shape constants only.
-6. Write the paper around D1, with the census and the reference bugs as supporting sections.
+2. Fold in the Makora audit, the nearby-shape population run and the sample of rejected rounds when they finish.
+3. Review and file the TritonGym report and the two Triton drafts in `reports/`.
+4. Decide on a further corpus only if the Makora result is ambiguous.
+5. Write the paper around D1, with the census and the reference bugs as supporting sections.
