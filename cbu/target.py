@@ -237,6 +237,68 @@ def _expose_atomics() -> dict:
     return seen
 
 
+def _match_compiler_boolops() -> dict:
+    """Make `and` and `or` on block tensors behave under the interpreter as they do when compiled.
+
+    The compiler turns `a and b` on tensors into an elementwise logical AND. The
+    interpreter leaves Python semantics in place and treats every non-scalar
+    tensor as true, so `row_mask and col_mask` silently becomes `col_mask`. A
+    kernel that is correct on a GPU then makes out-of-bounds accesses on CPU.
+    The interpreter's source rewriter is extended to route boolean operators
+    through a helper that follows the compiler's rule.
+    """
+    seen = {"n": 0}
+    try:
+        import ast
+
+        import triton.language as tl
+        import triton.runtime.interpreter as interp
+
+        sem = interp.interpreter_semantic
+
+        def boolop(kind, *thunks):
+            blocks, last = [], None
+            for thunk in thunks:
+                value = last = thunk()
+                is_block = isinstance(value, tl.core.tensor) and getattr(value.handle.data, "size", 1) != 1
+                if is_block:
+                    blocks.append(value)
+                    continue
+                truth = bool(value)
+                if (kind == "and" and not truth) or (kind == "or" and truth):
+                    return value
+            if not blocks:
+                return last
+            seen["n"] += 1
+            out = blocks[0]
+            for other in blocks[1:]:
+                out = sem.logical_and(out, other) if kind == "and" else sem.logical_or(out, other)
+            return out
+
+        type(sem)._cbu_boolop = staticmethod(boolop)
+
+        def visit_BoolOp(self, node):
+            self.generic_visit(node)
+            kind = "and" if isinstance(node.op, ast.And) else "or"
+            no_args = ast.arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[])
+            thunks = [ast.Lambda(args=no_args, body=v) for v in node.values]
+            func = ast.Attribute(value=ast.Name(id="interpreter_semantic", ctx=ast.Load()), attr="_cbu_boolop", ctx=ast.Load())
+            return ast.copy_location(ast.Call(func=func, args=[ast.Constant(value=kind)] + thunks, keywords=[]), node)
+
+        orig_assign = interp.ASTTransformer.visit_Assign
+
+        def visit_Assign(self, node):
+            # The stock rewriter wraps the right-hand side without descending into it.
+            node.value = self.visit(node.value)
+            return orig_assign(self, node)
+
+        interp.ASTTransformer.visit_BoolOp = visit_BoolOp
+        interp.ASTTransformer.visit_Assign = visit_Assign
+    except Exception:  # noqa: BLE001
+        seen["n"] = -1
+    return seen
+
+
 def _vary_batch(inputs: list, variant: str) -> list:
     """Change the leading dimension shared by the tensor inputs. Used as a cheap shape perturbation."""
     import torch
@@ -448,6 +510,7 @@ def main() -> int:
     clients = []
     launches = {"n": None}
     atomics = {"n": None}
+    boolops = {"n": None}
     try:
         if a.root:
             sys.path.insert(0, a.root)
@@ -465,6 +528,7 @@ def main() -> int:
             res["poison"] = {}
         launches = _count_kernel_launches()
         atomics = _expose_atomics()
+        boolops = _match_compiler_boolops()
         if a.mode == "tilelens":
             clients = _install_tilelens()
         res["status"] = "importing"
@@ -485,6 +549,7 @@ def main() -> int:
     res["seconds"] = round(time.time() - t0, 3)
     res["kernel_launches"] = launches.get("n")
     res["atomic_ops"] = atomics.get("n") if isinstance(atomics, dict) else None
+    res["tensor_boolops"] = boolops.get("n") if isinstance(boolops, dict) else None
     try:
         from cbu import cpu_shim as _shim
 
