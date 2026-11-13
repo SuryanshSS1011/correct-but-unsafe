@@ -76,11 +76,17 @@ class _AutotuneProxy:
         self.fn = fn
         self.configs = list(configs or [])
         AUTOTUNE_SEEN["max_configs"] = max(AUTOTUNE_SEEN["max_configs"], len(self.configs))
-        index = int(os.environ.get("CBU_AUTOTUNE_INDEX", "0") or 0)
+        raw = os.environ.get("CBU_AUTOTUNE_INDEX", "0") or "0"
+        # "tune:<w>" replays what the real autotuner does. The first call for a key runs
+        # every config on the caller's buffers and then the winner. Later calls run only
+        # the winner. <w> names the config that is assumed to have won.
+        self.tune = raw.startswith("tune:")
+        index = int(raw.split(":", 1)[1] if self.tune else raw)
         self.best_config = self.configs[index % len(self.configs)] if self.configs else None
+        self._tuned: set = set()
 
-    def _config_kwargs(self) -> dict:
-        cfg = self.best_config
+    @staticmethod
+    def _kwargs_of(cfg) -> dict:
         if cfg is None:
             return {}
         if hasattr(cfg, "all_kwargs"):
@@ -90,18 +96,40 @@ class _AutotuneProxy:
                 pass
         return dict(getattr(cfg, "kwargs", {}) or {})
 
+    def _config_kwargs(self) -> dict:
+        return self._kwargs_of(self.best_config)
+
+    @staticmethod
+    def _key(args, kwargs) -> tuple:
+        def one(v):
+            if hasattr(v, "shape") and hasattr(v, "dtype"):
+                return (tuple(v.shape), str(v.dtype))
+            return v if isinstance(v, (int, float, bool, str, type(None))) else type(v).__name__
+
+        return tuple(one(v) for v in args) + tuple((k, one(v)) for k, v in sorted(kwargs.items()))
+
+    def _launch(self, runner, args, kwargs):
+        if self.tune and len(self.configs) > 1:
+            key = self._key(args, kwargs)
+            if key not in self._tuned:
+                self._tuned.add(key)
+                AUTOTUNE_SEEN["tuning_passes"] = AUTOTUNE_SEEN.get("tuning_passes", 0) + 1
+                for cfg in self.configs:
+                    merged = self._kwargs_of(cfg)
+                    merged.update(kwargs)
+                    runner(*args, **merged)
+        merged = self._config_kwargs()
+        merged.update(kwargs)
+        return runner(*args, **merged)
+
     def __getitem__(self, grid):
         def launch(*args, **kwargs):
-            merged = self._config_kwargs()
-            merged.update(kwargs)
-            return self.fn[grid](*args, **merged)
+            return self._launch(self.fn[grid], args, kwargs)
 
         return launch
 
     def run(self, *args, **kwargs):
-        merged = self._config_kwargs()
-        merged.update(kwargs)
-        return self.fn.run(*args, **merged)
+        return self._launch(self.fn.run, args, kwargs)
 
     def __getattr__(self, name):
         return getattr(self.fn, name)

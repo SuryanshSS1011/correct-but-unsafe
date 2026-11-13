@@ -107,18 +107,22 @@ def main(argv: list[str]) -> int:
     m = [r for r in aud if r["matches_ref_native"] is not None]
     print(f"- Auditable kernels whose CPU output matches the reference within 1e-2: {pct(sum(1 for r in m if r['matches_ref_native']), len(m))}.")
     print(f"- Flagged by at least one detector: {pct(len(flagged), len(aud))}.")
-    for det in ("plain", "tilelens", "asan", "perturb", "poison"):
+    for det in ("plain", "bounds", "tilelens", "asan", "perturb", "poison"):
         k = sum(1 for r in aud if det in r["flags"])
         print(f"  - {det}: {pct(k, len(aud))}")
-    concrete = [r for r in aud if any(d in r["flags"] for d in ("plain", "asan", "perturb", "poison"))]
+    both = sum(1 for r in aud if "asan" in r["flags"] and "bounds" in r["flags"])
+    only_a = [r["id"] for r in aud if "asan" in r["flags"] and "bounds" not in r["flags"]]
+    only_b = [r["id"] for r in aud if "bounds" in r["flags"] and "asan" not in r["flags"]]
+    print(f"- asan and the exact bounds oracle agree on {both} kernels. asan only: {only_a}. bounds only: {only_b}.")
+    concrete = [r for r in aud if any(d in r["flags"] for d in ("plain", "bounds", "asan", "perturb", "poison"))]
     symbolic_only = [r for r in flagged if set(r["flags"]) == {"tilelens"}]
     uninit = [r for r in aud if any(d in r["flags"] for d in ("perturb", "poison"))]
     print(f"- Flagged by a concrete detector (plain crash, asan, perturb or poison): {pct(len(concrete), len(aud))}.")
     print(f"- Flagged by the symbolic detector alone, which needs manual triage: {len(symbolic_only)}.")
     print(f"- Uninitialized-memory signal (perturb or poison): {pct(len(uninit), len(aud))}.")
-    oob = [r for r in aud if any(d in r["flags"] for d in ("tilelens", "asan", "plain"))]
+    oob = [r for r in aud if any(d in r["flags"] for d in ("tilelens", "asan", "plain", "bounds"))]
     both = [r for r in aud if "tilelens" in r["flags"] and "asan" in r["flags"]]
-    print(f"- Out-of-bounds signal (plain crash, tilelens or asan): {pct(len(oob), len(aud))}.")
+    print(f"- Out-of-bounds signal (plain crash, tilelens, asan or bounds): {pct(len(oob), len(aud))}.")
     print(f"- Flagged by both tilelens and asan: {len(both)}.")
     native_only = [r for r in flagged if any("native" in v for v in r["flags"].values())]
     print(f"- Flagged at the benchmark's own input shape: {pct(len(native_only), len(aud))}.")

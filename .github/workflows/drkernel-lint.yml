@@ -1,0 +1,28 @@
+name: drkernel-lint
+
+# Static analysis only. No corpus code is executed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install datasets
+      - name: Lint every round
+        run: python tools/lint_rounds.py --out-dir results/raw/lint | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint
+          path: results/raw/lint/
+          retention-days: 60

@@ -47,7 +47,7 @@ jobs:
       - name: Run detectors on shard ${{ matrix.shard }}
         run: |
           python pilot/drkernel/run_pilot.py --data data/pilot.jsonl --shard ${{ matrix.shard }}/8 \
-            --detectors plain,tilelens,asan,perturb,poison --variants native,batch3 \
+            --detectors plain,bounds,tilelens,asan,perturb,poison --variants native,batch3 \
             --out results/raw/pilot_shard${{ matrix.shard }}.json
       - uses: actions/upload-artifact@v4
         if: always()

@@ -15,7 +15,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from cbu.detect import DETECTORS  # noqa: E402
+from cbu.detect import DETECTORS, bounds_from  # noqa: E402
 
 
 def read_jsonl(path: str):
@@ -32,12 +32,13 @@ def main() -> int:
     ap.add_argument("--work", default="work/drkernel")
     ap.add_argument("--shard", default="0/1")
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--detectors", default="plain,tilelens,asan,perturb,poison")
+    ap.add_argument("--detectors", default="plain,bounds,tilelens,asan,perturb,poison")
     ap.add_argument("--variants", default="native,batch3")
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--max-configs", type=int, default=6, help="audit at most this many autotune configs per kernel")
     ap.add_argument("--budget", type=int, default=1500, help="seconds per kernel before remaining variants are skipped")
     ap.add_argument("--const-variants", type=int, default=3, help="perturb up to this many shape constants one at a time, plus all at once")
+    ap.add_argument("--model-mode", choices=["eval", "train"], default="eval")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -50,7 +51,7 @@ def main() -> int:
     work = Path(a.work).resolve()
     out_path = Path(a.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    results = {"detectors": detectors, "variants": variants, "shard": a.shard, "kernels": []}
+    results = {"detectors": detectors, "variants": variants, "shard": a.shard, "model_mode": a.model_mode, "kernels": []}
     for item in items:
         kid = f"{item['uuid']}_r{item['round']}"
         d = work / kid
@@ -74,11 +75,13 @@ def main() -> int:
                 entry.setdefault("skipped_for_budget", []).append([variant, cfg])
                 continue
             done.add((variant, cfg))
-            spec = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": variant, "autotune_index": cfg}
+            spec = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": variant, "autotune_index": cfg, "model_mode": a.model_mode}
             run = {"variant": variant if cfg == 0 else f"{variant}/cfg{cfg}", "shape_variant": variant, "autotune_index": cfg, "detectors": {}}
             for det in detectors:
                 if det == "tilelens" and (cfg > 0 or variant.startswith("const:")):
                     continue  # the symbolic check runs on the benchmark shapes; other variants use the concrete detectors
+                if det == "bounds":
+                    continue  # read from the plain run below, which already carries the oracle's result
                 t0 = time.time()
                 try:
                     r = DETECTORS[det](spec, timeout=a.timeout)
@@ -89,6 +92,8 @@ def main() -> int:
                 res = r.get("result") if isinstance(r.get("result"), dict) else {}
                 print(f"{kid} {run['variant']} {det}: flagged={r.get('flagged')} status={res.get('status')} launches={res.get('kernel_launches')} t={r['wall_seconds']}s", flush=True)
                 if det == "plain":
+                    if "bounds" in detectors:
+                        run["detectors"]["bounds"] = bounds_from(r)
                     if res.get("status") == "ok":
                         spec["baseline"] = {"out": (res.get("output") or {}).get("sha256"), "inp": (res.get("inputs_after") or {}).get("sha256"), "inp0": (res.get("inputs_before") or {}).get("sha256"), "nan": (res.get("output") or {}).get("nan")}
                     failed = res.get("status") != "ok" and r.get("crash_signal") is None

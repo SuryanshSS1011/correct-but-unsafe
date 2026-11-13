@@ -299,6 +299,144 @@ def _match_compiler_boolops() -> dict:
     return seen
 
 
+_STATE: dict = {}
+
+
+def _bounds_oracle() -> dict:
+    """Check every masked-in address of every load and store against the kernel's own tensors.
+
+    A Triton kernel can only reach memory through its pointer arguments. At each
+    launch the storage ranges of the tensor arguments are recorded, and each
+    access is compared with them. This is exact for the executed inputs and does
+    not depend on the allocator, so it also sees an access that lands in another
+    live allocation, which a redzone-based sanitizer misses.
+    """
+    state = {"ranges": [], "violations": [], "n": 0, "accesses": 0, "active": False}
+    try:
+        import numpy as np
+        import torch
+        import triton.runtime.interpreter as interp
+
+        builder = interp.InterpreterBuilder
+        orig_call = interp.GridExecutor.__call__
+        orig_load, orig_store = builder.create_masked_load, builder.create_masked_store
+
+        def call(self, *args, **kwargs):
+            ranges = []
+            for v in list(args) + list(kwargs.values()):
+                if isinstance(v, torch.Tensor) and v.numel():
+                    st = v.untyped_storage()
+                    ranges.append((int(st.data_ptr()), int(st.data_ptr()) + int(st.nbytes())))
+            prev, state["ranges"] = state["ranges"], sorted(set(ranges))
+            try:
+                return orig_call(self, *args, **kwargs)
+            finally:
+                state["ranges"] = prev
+
+        def check(ptr, mask, kind):
+            ranges = state["ranges"]
+            if not ranges:
+                return
+            try:
+                size = max(1, int(ptr.dtype.element_ty.primitive_bitwidth) // 8)
+                p, m = np.broadcast_arrays(np.asarray(ptr.data, dtype=np.int64), np.asarray(mask.data).astype(bool))
+                state["accesses"] += int(m.sum())
+                ok = np.zeros(p.shape, dtype=bool)
+                for lo, hi in ranges:
+                    ok |= (p >= lo) & (p + size <= hi)
+                bad = m & ~ok
+                if not bad.any():
+                    return
+                state["n"] += int(bad.sum())
+                if len(state["violations"]) < 8:
+                    addr = int(p[bad].ravel()[0])
+                    lo, hi = min(ranges, key=lambda r: min(abs(addr - r[0]), abs(addr - r[1])))
+                    state["violations"].append({
+                        "kind": kind, "size": size, "lanes": int(bad.sum()), "region_bytes": hi - lo,
+                        "side": "before" if addr < lo else "after",
+                        "offset_bytes": (lo - addr) if addr < lo else (addr - hi),
+                    })
+            except Exception as e:  # noqa: BLE001 - the oracle must never change the kernel's behaviour
+                state.setdefault("errors", []).append(f"{type(e).__name__}: {e}"[:160])
+
+        def load(self, ptrs, mask, *rest, **kw):
+            check(ptrs, mask, "load")
+            return orig_load(self, ptrs, mask, *rest, **kw)
+
+        def store(self, ptrs, value, mask, *rest, **kw):
+            check(ptrs, mask, "store")
+            return orig_store(self, ptrs, value, mask, *rest, **kw)
+
+        interp.GridExecutor.__call__ = call
+        builder.create_masked_load, builder.create_masked_store = load, store
+        state["active"] = True
+    except Exception as e:  # noqa: BLE001
+        state["install_error"] = f"{type(e).__name__}: {e}"[:200]
+    return state
+
+
+def _run_replay(a, res: dict) -> None:
+    """Replay KernelGYM's correctness protocol in one process and record every trial.
+
+    The loop follows kernelgym/toolkit/kernelbench/correctness.py. The models are
+    built once, the trial seeds are drawn from seed 42, the reference runs before
+    the candidate and the outputs are compared with allclose at 1e-2. KernelGYM
+    leaves the models in training mode, and --model-mode selects that or eval.
+    """
+    import torch
+
+    res["status"] = "reference"
+    torch.manual_seed(a.seed)
+    ref = _load_module(a.ref_file, "cbu_reference_module")
+    torch.manual_seed(a.seed)
+    get_init = getattr(ref, "get_init_inputs", None)
+    init_args = list(get_init() or []) if get_init is not None else []
+    torch.manual_seed(a.seed)
+    ref_model = ref.Model(*init_args)
+    res["status"] = "importing"
+    torch.manual_seed(a.seed)
+    cand = _load_module(a.file, "cbu_target_module")
+    torch.manual_seed(a.seed)
+    cand_model = cand.ModelNew(*init_args)
+    if a.model_mode == "eval":
+        ref_model.eval()
+        cand_model.eval()
+    torch.manual_seed(42)
+    seeds = [int(torch.randint(0, 2**32 - 1, (1,)).item()) for _ in range(a.replay)]
+    launches = _STATE.get("launches") or {}
+    trials: list = []
+    res["replay"] = {"model_mode": a.model_mode, "trials": trials}
+    res["status"] = "running"
+    with torch.no_grad():
+        for seed in seeds:
+            torch.manual_seed(seed)
+            inputs = list(ref.get_inputs())
+            torch.manual_seed(seed)
+            before = launches.get("n") or 0
+            output = ref_model(*inputs)
+            trial: dict = {}
+            trials.append(trial)
+            try:
+                output_new = cand_model(*inputs)
+            except Exception as e:  # noqa: BLE001
+                trial["error"] = f"{type(e).__name__}: {e}"[:200]
+                break
+            trial["launches"] = (launches.get("n") or 0) - before
+            o: list = []
+            c: list = []
+            _flatten(output, o)
+            _flatten(output_new, c)
+            same = [list(x.shape) for x in o] == [list(x.shape) for x in c]
+            trial["shape_match"] = same
+            trial["allclose"] = bool(same and all(torch.allclose(x, y, atol=1e-2, rtol=1e-2) for x, y in zip(o, c)))
+            if "poison" in res:
+                from cbu import poison
+
+                pc = poison.count(c)
+                trial.update({"elements": pc["elements"], "unwritten": pc["unwritten"], "nan": pc["nan"]})
+    res["input_shapes"] = [[str(x.dtype), list(x.shape)] if isinstance(x, torch.Tensor) else type(x).__name__ for x in inputs]
+
+
 def _vary_batch(inputs: list, variant: str) -> list:
     """Change the leading dimension shared by the tensor inputs. Used as a cheap shape perturbation."""
     import torch
@@ -427,7 +565,9 @@ def _run_kernelbench(a, res: dict) -> None:
     get_init = getattr(ref, "get_init_inputs", None)
     init_args = list(get_init() or []) if get_init is not None else []
     torch.manual_seed(a.seed)
-    ref_model = ref.Model(*init_args).eval()
+    ref_model = ref.Model(*init_args)
+    if a.model_mode == "eval":
+        ref_model.eval()
     torch.manual_seed(a.seed)
     inputs = list(ref.get_inputs())
     if a.variant.startswith("const:"):
@@ -449,7 +589,9 @@ def _run_kernelbench(a, res: dict) -> None:
     cand = _load_module(a.file, "cbu_target_module")
     res["asan_log_bytes_at_import"] = _asan_log_bytes()
     torch.manual_seed(a.seed)
-    cand_model = cand.ModelNew(*init_args).eval()
+    cand_model = cand.ModelNew(*init_args)
+    if a.model_mode == "eval":
+        cand_model.eval()
     try:
         cand_model.load_state_dict(ref_model.state_dict(), strict=False)
     except Exception as e:  # noqa: BLE001 - parameter layouts may differ by design
@@ -506,6 +648,8 @@ def main() -> int:
     ap.add_argument("--mode", choices=["plain", "tilelens"], default="plain")
     ap.add_argument("--dtype", default="float32")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--model-mode", choices=["eval", "train"], default="eval", help="KernelGYM leaves models in training mode")
+    ap.add_argument("--replay", type=int, default=0, help="kernelbench: replay this many KernelGYM correctness trials in one process")
     ap.add_argument("--no-shim", action="store_true", help="do not redirect CUDA device requests to the CPU")
     ap.add_argument("--no-pretend-cuda", action="store_true", help="keep is_cuda and device truthful, so CUDA-guarded wrappers fall back")
     a = ap.parse_args()
@@ -515,6 +659,7 @@ def main() -> int:
     clients = []
     launches = {"n": None}
     atomics = {"n": None}
+    bounds: dict = {}
     boolops = {"n": None}
     try:
         if a.root:
@@ -532,6 +677,8 @@ def main() -> int:
             poison.install()
             res["poison"] = {}
         launches = _count_kernel_launches()
+        _STATE["launches"] = launches
+        bounds = _bounds_oracle()
         atomics = _expose_atomics()
         boolops = _match_compiler_boolops()
         if a.mode == "tilelens":
@@ -539,6 +686,8 @@ def main() -> int:
         res["status"] = "importing"
         if a.adapter == "tritongym":
             _run_tritongym(a, res)
+        elif a.replay:
+            _run_replay(a, res)
         else:
             _run_kernelbench(a, res)
         res["status"] = "ok"
@@ -554,12 +703,15 @@ def main() -> int:
     res["seconds"] = round(time.time() - t0, 3)
     res["kernel_launches"] = launches.get("n")
     res["atomic_ops"] = atomics.get("n") if isinstance(atomics, dict) else None
+    res["bounds"] = {k: bounds.get(k) for k in ("active", "n", "accesses", "violations", "errors", "install_error") if bounds.get(k) is not None}
+    res["model_mode"] = a.model_mode
     res["tensor_boolops"] = boolops.get("n") if isinstance(boolops, dict) else None
     try:
         from cbu import cpu_shim as _shim
 
         res["autotune_max_configs"] = _shim.AUTOTUNE_SEEN["max_configs"]
-        res["autotune_index"] = int(os.environ.get("CBU_AUTOTUNE_INDEX", "0") or 0)
+        res["autotune_index"] = os.environ.get("CBU_AUTOTUNE_INDEX", "0") or "0"
+        res["autotune_tuning_passes"] = _shim.AUTOTUNE_SEEN.get("tuning_passes", 0)
     except Exception:  # noqa: BLE001
         pass
     if a.mode == "tilelens":

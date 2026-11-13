@@ -13,7 +13,7 @@ on:
         default: "0"
       detectors:
         description: "comma-separated detectors"
-        default: "plain,asan,poison"
+        default: "plain,bounds,asan,poison"
 
 permissions:
   contents: read
@@ -46,7 +46,7 @@ jobs:
       - name: Run detectors on shard ${{ matrix.shard }}
         run: |
           timeout --signal=INT 330m python pilot/drkernel/run_pilot.py --data data/census.jsonl --shard ${{ matrix.shard }}/20 \
-            --detectors "${{ inputs.detectors || 'plain,asan,poison' }}" --variants native \
+            --detectors "${{ inputs.detectors || 'plain,bounds,asan,poison' }}" --variants native \
             --max-configs 4 --const-variants 0 --timeout 240 --budget 300 \
             --out results/raw/census_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
       - uses: actions/upload-artifact@v4

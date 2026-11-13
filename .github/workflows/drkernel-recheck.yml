@@ -1,0 +1,68 @@
+name: drkernel-recheck
+
+# Deep recheck of named kernels. Every autotune config is audited in eval and
+# training mode, and KernelGYM's correctness trials are replayed once per
+# assumed autotune winner. The jobs execute corpus code, so they hold no
+# secrets and have a read-only token.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernels:
+        description: "uuid:round,... or 'flagged' for every kernel in results/triage-census.json"
+        default: "flagged"
+      modes:
+        description: "model modes"
+        default: "eval,train"
+      shards:
+        description: "number of shards, at most 12"
+        default: "8"
+
+permissions:
+  contents: read
+
+jobs:
+  recheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - name: Skip unused shards
+        id: gate
+        run: |
+          if [ "${{ matrix.shard }}" -lt "${{ inputs.shards || '8' }}" ]; then echo "run=1" >> "$GITHUB_OUTPUT"; else echo "run=0" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == '1'
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == '1'
+        with:
+          python-version: "3.12"
+      - name: Install CPU environment
+        if: steps.gate.outputs.run == '1'
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install -r requirements-cpu.txt datasets
+      - name: Dump kernels
+        if: steps.gate.outputs.run == '1'
+        env:
+          KERNELS: ${{ inputs.kernels || 'flagged' }}
+        run: |
+          if [ "$KERNELS" = "flagged" ]; then
+            KERNELS=$(python -c "import json;t=json.load(open('results/triage-census.json'));ids=list(t['out_of_bounds_read'])+list(t['uninitialized_output_source_read'])+t['uninitialized_output_pattern_only']+list(t['false_positive']);print(','.join(i.replace('_r',':') for i in sorted(ids)))")
+          fi
+          python tools/dump_kernels.py --kernels "$KERNELS" --out data/recheck.jsonl
+      - name: Recheck shard ${{ matrix.shard }}
+        if: steps.gate.outputs.run == '1'
+        run: |
+          timeout --signal=INT 330m python pilot/drkernel/recheck.py --data data/recheck.jsonl --shard ${{ matrix.shard }}/${{ inputs.shards || '8' }} \
+            --modes "${{ inputs.modes || 'eval,train' }}" --out results/raw/recheck_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.gate.outputs.run == '1'
+        with:
+          name: recheck-shard-${{ matrix.shard }}
+          path: results/raw/
+          retention-days: 60

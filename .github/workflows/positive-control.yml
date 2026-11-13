@@ -54,7 +54,7 @@ jobs:
           python controls/tritongym/run_control.py \
             --checkout ext/tritongym --label ${{ matrix.label }} \
             --ops "${{ inputs.ops || 'known' }}" \
-            --detectors plain,tilelens,asan,perturb,poison \
+            --detectors plain,bounds,tilelens,asan,perturb,poison \
             --out results/raw/tritongym_${{ matrix.label }}.json
       - name: Summarize
         if: always()

@@ -67,9 +67,9 @@ def _target_cmd(spec: dict, mode: str) -> list[str]:
     cmd += ["--shapes", json.dumps(spec.get("shapes", []))]
     cmd += ["--dtype", spec.get("dtype", "float32")]
     cmd += ["--variant", spec.get("variant", "native")]
-    for key, flag in (("func", "--func"), ("root", "--root"), ("ref_file", "--ref-file")):
+    for key, flag in (("func", "--func"), ("root", "--root"), ("ref_file", "--ref-file"), ("model_mode", "--model-mode"), ("replay", "--replay")):
         if spec.get(key):
-            cmd += [flag, spec[key]]
+            cmd += [flag, str(spec[key])]
     return cmd
 
 
@@ -256,4 +256,36 @@ def run_poison(spec: dict, timeout: int = 600) -> dict:
     return r
 
 
-DETECTORS = {"plain": run_plain, "tilelens": run_tilelens, "asan": run_asan, "perturb": run_perturb, "poison": run_poison}
+def bounds_from(plain: dict) -> dict:
+    """Read the exact bounds oracle out of a finished plain run. It costs no extra run."""
+    res = plain.get("result") or {}
+    b = res.get("bounds") or {}
+    return {
+        "active": bool(b.get("active")),
+        "violating_lanes": int(b.get("n") or 0),
+        "accesses": int(b.get("accesses") or 0),
+        "violations": b.get("violations") or [],
+        "flagged": bool(b.get("n")),
+        "result": {"status": res.get("status"), "kernel_launches": res.get("kernel_launches")},
+    }
+
+
+def run_bounds(spec: dict, timeout: int = 600) -> dict:
+    return bounds_from(run_plain(spec, timeout))
+
+
+def run_replay(spec: dict, winner: int, trials: int = 5, model_mode: str = "train", timeout: int = 900) -> dict:
+    """Replay KernelGYM's correctness trials with poisoned allocations, assuming config `winner` won autotuning."""
+    sp = dict(spec, replay=trials, model_mode=model_mode, autotune_index=f"tune:{winner}")
+    r = _run(sp, "plain", {"TRITON_INTERPRET": "1", "CBU_POISON": "1"}, timeout)
+    r.pop("_stderr", None)
+    res = r.get("result") or {}
+    tr = (res.get("replay") or {}).get("trials") or []
+    r["trials"] = tr
+    r["launches"] = [t.get("launches") for t in tr]
+    r["unwritten"] = [t.get("unwritten") for t in tr]
+    r["pass"] = [bool(t.get("allclose")) and not t.get("unwritten") and "error" not in t for t in tr]
+    return r
+
+
+DETECTORS = {"bounds": run_bounds, "plain": run_plain, "tilelens": run_tilelens, "asan": run_asan, "perturb": run_perturb, "poison": run_poison}
