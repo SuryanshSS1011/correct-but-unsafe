@@ -26,9 +26,9 @@ source reading only. Grade C means inference.
 | 8 | The model usually repairs the pattern after a failure. | After a 1-of-5 failure, 384 of 453 next rounds use a grid that depends on the config, and 311 of those were accepted. | A |
 | 9 | The pattern is not rewarded with speed. | Accepted rounds with the pattern have a median speedup of 0.63, against 0.60 and 0.68 for the other two groups. | A |
 | 10 | AddressSanitizer on the interpreter and an exact bounds oracle agree. | They agree on all 37 flagged cases of the positive control, on all 141 configs of the 36 flagged kernels, and on a random sample of 298 accepted kernels, where neither flags anything. | B |
+| 11 | A static rule finds the config-dependent class. | Rule L1 marks 23 of the 24 config-dependent census kernels. It also marks 281 accepted best-round kernels that the census did not flag, so it over-approximates. | B |
 | 12 | A kernel with the defect is rejected about three times in four. | Scaling the finished shards to the full lists gives about 420 rejected rounds and about 140 accepted rounds with a partial config. Partial configs are 30% to 40% of the configs in these kernels, so they win about twice as often as a uniform draw would give. | B |
 | 13 | The CPU detectors miss some errors that crash on a GPU. | Of the 24 rounds that recorded an illegal memory access or a device-side assert, 17 ran on CPU. The bounds oracle flagged 9 of them. Four of the misses run clean and correct on CPU. | B |
-| 11 | A static rule finds the config-dependent class. | Rule L1 marks 23 of the 24 config-dependent census kernels. It also marks 281 accepted best-round kernels that the census did not flag, so it over-approximates. | B |
 
 ## 2. What changed in the reading of the results
 
