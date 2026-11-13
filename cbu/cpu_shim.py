@@ -159,6 +159,34 @@ def install(pretend_cuda: bool = True) -> None:
     cuda.manual_seed = lambda *a, **k: None
     cuda.manual_seed_all = lambda *a, **k: None
     cuda.set_device = lambda *a, **k: None
+
+    class _NoDevice:
+        """Stands in for the torch.cuda.device context manager."""
+
+        def __init__(self, *a, **k):
+            self.idx = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    class _Props:
+        name = "cpu-shim"
+        major, minor = 9, 0
+        total_memory = 80 * 1024**3
+        multi_processor_count = 132
+        warp_size = 32
+
+    cuda.device = _NoDevice
+    cuda.get_device_properties = lambda *a, **k: _Props()
+    cuda.get_device_capability = lambda *a, **k: (9, 0)
+    cuda.current_stream = lambda *a, **k: None
+    cuda.is_initialized = lambda *a, **k: True
+    cuda.mem_get_info = lambda *a, **k: (_Props.total_memory, _Props.total_memory)
+    if not hasattr(torch._C, "_cuda_getCurrentRawStream"):
+        torch._C._cuda_getCurrentRawStream = lambda *a, **k: 0
     try:
         import triton
 

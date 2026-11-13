@@ -203,6 +203,40 @@ def _count_kernel_launches() -> dict:
     return counter
 
 
+def _expose_atomics() -> dict:
+    """Route the addresses of atomic operations through a masked load before the operation runs.
+
+    The interpreter does loads and stores with memcpy, which a preloaded ASan
+    intercepts. Its atomic operations write through raw pointers, which ASan
+    cannot see in an uninstrumented library. Loading the same addresses first
+    makes an out-of-bounds atomic access visible as an out-of-bounds read.
+    """
+    seen = {"n": 0}
+    try:
+        import numpy as np
+        import triton.language as tl
+        import triton.runtime.interpreter as interp
+
+        builder = interp.InterpreterBuilder
+        orig_rmw, orig_cas = builder.create_atomic_rmw, builder.create_atomic_cas
+
+        def rmw(self, rmwOp, ptr, val, mask, sem, scope):
+            seen["n"] += 1
+            self.create_masked_load(ptr, mask, None, None, None, False)
+            return orig_rmw(self, rmwOp, ptr, val, mask, sem, scope)
+
+        def cas(self, ptr, cmp, val, sem, scope):
+            seen["n"] += 1
+            mask = interp.TensorHandle(np.ones_like(ptr.data, dtype=bool), tl.int1)
+            self.create_masked_load(ptr, mask, None, None, None, False)
+            return orig_cas(self, ptr, cmp, val, sem, scope)
+
+        builder.create_atomic_rmw, builder.create_atomic_cas = rmw, cas
+    except Exception:  # noqa: BLE001
+        seen["n"] = -1
+    return seen
+
+
 def _vary_batch(inputs: list, variant: str) -> list:
     """Change the leading dimension shared by the tensor inputs. Used as a cheap shape perturbation."""
     import torch
@@ -413,6 +447,7 @@ def main() -> int:
     t0 = time.time()
     clients = []
     launches = {"n": None}
+    atomics = {"n": None}
     try:
         if a.root:
             sys.path.insert(0, a.root)
@@ -429,6 +464,7 @@ def main() -> int:
             poison.install()
             res["poison"] = {}
         launches = _count_kernel_launches()
+        atomics = _expose_atomics()
         if a.mode == "tilelens":
             clients = _install_tilelens()
         res["status"] = "importing"
@@ -448,6 +484,7 @@ def main() -> int:
         res["traceback"] = traceback.format_exc()[-3000:]
     res["seconds"] = round(time.time() - t0, 3)
     res["kernel_launches"] = launches.get("n")
+    res["atomic_ops"] = atomics.get("n") if isinstance(atomics, dict) else None
     try:
         from cbu import cpu_shim as _shim
 
