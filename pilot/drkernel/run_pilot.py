@@ -37,6 +37,7 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--max-configs", type=int, default=6, help="audit at most this many autotune configs per kernel")
     ap.add_argument("--budget", type=int, default=1500, help="seconds per kernel before remaining variants are skipped")
+    ap.add_argument("--const-variants", type=int, default=3, help="perturb up to this many shape constants one at a time, plus all at once")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -76,8 +77,8 @@ def main() -> int:
             spec = {"adapter": "kernelbench", "file": str(d / "cand.py"), "ref_file": str(d / "ref.py"), "op": kid, "variant": variant, "autotune_index": cfg}
             run = {"variant": variant if cfg == 0 else f"{variant}/cfg{cfg}", "shape_variant": variant, "autotune_index": cfg, "detectors": {}}
             for det in detectors:
-                if det == "tilelens" and cfg > 0:
-                    continue  # the symbolic check is run once per shape; extra configs use the concrete detectors
+                if det == "tilelens" and (cfg > 0 or variant.startswith("const:")):
+                    continue  # the symbolic check runs on the benchmark shapes; other variants use the concrete detectors
                 t0 = time.time()
                 try:
                     r = DETECTORS[det](spec, timeout=a.timeout)
@@ -98,6 +99,13 @@ def main() -> int:
                         entry["autotune_max_configs"] = n_cfg
                         for extra in range(1, min(n_cfg, a.max_configs)):
                             queue.append(("native", extra))
+                        n_const = int(res.get("n_int_constants") or 0)
+                        entry["n_int_constants"] = n_const
+                        if a.const_variants > 0 and n_const > 0:
+                            for ci in range(min(n_const, a.const_variants)):
+                                queue.append((f"const:{ci}", 0))
+                            if n_const > 1:
+                                queue.append(("const:all", 0))
                     if failed:
                         break  # other detectors would hit the same non-memory failure
             entry["runs"].append(run)

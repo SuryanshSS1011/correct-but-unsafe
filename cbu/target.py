@@ -217,6 +217,80 @@ def _vary_batch(inputs: list, variant: str) -> list:
     return out
 
 
+SKIP_KEYWORDS = {"dim", "axis", "dtype", "p", "ord", "device", "start_dim", "end_dim"}
+
+
+def _int_constants(tree) -> list:
+    """Integer literals that define the benchmark shapes, as (label, node) pairs.
+
+    Two sources are collected in order: module-level `name = <int>` assignments,
+    and integer literals inside `get_inputs` and `get_init_inputs`. Only values
+    of at least 2 are kept, and literals passed as axis-like keywords are skipped.
+    """
+    import ast
+
+    slots = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            v = node.value
+            if isinstance(v, ast.Constant) and isinstance(v.value, int) and not isinstance(v.value, bool) and v.value >= 2:
+                slots.append((node.targets[0].id, v))
+
+    def visit(n, fname):
+        for field, value in ast.iter_fields(n):
+            children = value if isinstance(value, list) else [value]
+            for child in children:
+                if not isinstance(child, ast.AST):
+                    continue
+                if isinstance(child, ast.keyword) and child.arg in SKIP_KEYWORDS:
+                    continue
+                if isinstance(child, ast.Constant) and isinstance(child.value, int) and not isinstance(child.value, bool) and child.value >= 2:
+                    slots.append((f"{fname}:{child.lineno}:{child.col_offset}", child))
+                else:
+                    visit(child, fname)
+
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in ("get_inputs", "get_init_inputs"):
+            visit(node, node.name)
+    return slots
+
+
+def _perturbed_reference(path: str, variant: str, res: dict) -> str:
+    """Rewrite shape constants in the reference file and return the path of the new file.
+
+    `const:i` adds one to every literal that has the i-th distinct value, and
+    `const:all` adds one to every collected literal.
+    The reference defines its inputs and constructor arguments from these
+    constants, so the perturbed file describes the same module at a nearby shape.
+    """
+    import ast
+    import tempfile
+
+    src = open(path).read()
+    tree = ast.parse(src)
+    # Literals with the same value move together, so a size that appears in both
+    # get_inputs and get_init_inputs stays consistent after the change.
+    groups: dict = {}
+    for label, node in _int_constants(tree):
+        groups.setdefault(node.value, []).append((label, node))
+    values = list(groups)
+    res["n_int_constants"] = len(values)
+    if not variant.startswith("const:"):
+        return path
+    which = variant.split(":", 1)[1]
+    chosen = values if which == "all" else [values[int(which)]]
+    changed = {}
+    for value in chosen:
+        for label, node in groups[value]:
+            changed[label] = [value, value + 1]
+            node.value = value + 1
+    res["perturbed_constants"] = changed
+    fd, new_path = tempfile.mkstemp(suffix=".py", prefix="cbu_ref_")
+    with os.fdopen(fd, "w") as f:
+        f.write(ast.unparse(tree))
+    return new_path
+
+
 def _run_tritongym(a, res: dict) -> None:
     import torch
 
@@ -239,14 +313,22 @@ def _run_tritongym(a, res: dict) -> None:
 def _run_kernelbench(a, res: dict) -> None:
     import torch
 
-    ref = _load_module(a.ref_file, "cbu_reference_module")
+    res["status"] = "reference"
+    ref_path = _perturbed_reference(a.ref_file, a.variant, res)
+    ref = _load_module(ref_path, "cbu_reference_module")
     torch.manual_seed(a.seed)
     get_init = getattr(ref, "get_init_inputs", None)
     init_args = list(get_init() or []) if get_init is not None else []
     torch.manual_seed(a.seed)
     ref_model = ref.Model(*init_args).eval()
     torch.manual_seed(a.seed)
-    inputs = _vary_batch(list(ref.get_inputs()), a.variant)
+    inputs = list(ref.get_inputs())
+    if a.variant.startswith("const:"):
+        # The perturbed shape only counts when the reference itself accepts it.
+        with torch.no_grad():
+            ref_model(*[x.clone() if isinstance(x, torch.Tensor) else x for x in inputs])
+    else:
+        inputs = _vary_batch(inputs, a.variant)
     res["input_shapes"] = [[str(x.dtype), list(x.shape)] if isinstance(x, torch.Tensor) else type(x).__name__ for x in inputs]
 
     res["status"] = "importing"
@@ -300,7 +382,7 @@ def main() -> int:
     ap.add_argument("--op", default="kernel")
     ap.add_argument("--func", default=None)
     ap.add_argument("--shapes", default="[]", help="tritongym: JSON list of tensor shapes for one case")
-    ap.add_argument("--variant", default="native", choices=["native", "batch1", "batch3", "batch7"])
+    ap.add_argument("--variant", default="native", help="native, batch1, batch3, batch7, const:<i> or const:all")
     ap.add_argument("--root", default=None, help="directory to put on sys.path")
     ap.add_argument("--mode", choices=["plain", "tilelens"], default="plain")
     ap.add_argument("--dtype", default="float32")

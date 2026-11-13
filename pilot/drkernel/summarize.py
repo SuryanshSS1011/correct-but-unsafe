@@ -52,6 +52,24 @@ def classify(kernel: dict) -> dict:
         out["exclusion"] = exc[:70]
     if not out["auditable"]:
         return out
+    out["nearby"] = collections.Counter()
+    for run in kernel["runs"]:
+        if not str(run.get("shape_variant", "")).startswith("const:"):
+            continue
+        p = run["detectors"].get("plain", {})
+        pres = p.get("result") or {}
+        if p.get("crash_signal"):
+            out["nearby"]["crash"] += 1
+        elif pres.get("status") == "exception" and pres.get("status_at_failure") == "reference":
+            out["nearby"]["reference rejects shape"] += 1
+        elif pres.get("status") == "exception":
+            out["nearby"]["candidate raises"] += 1
+        elif pres.get("status") == "ok" and (pres.get("kernel_launches") or 0) == 0:
+            out["nearby"]["no launch"] += 1
+        elif pres.get("status") == "ok" and (pres.get("reference") or {}).get("allclose_1e-2"):
+            out["nearby"]["matches reference"] += 1
+        elif pres.get("status") == "ok":
+            out["nearby"]["silently wrong"] += 1
     for run in kernel["runs"]:
         for det, r in run["detectors"].items():
             if not r.get("flagged"):
@@ -98,6 +116,15 @@ def main(argv: list[str]) -> int:
     print(f"- Flagged at the benchmark's own input shape: {pct(len(native_only), len(aud))}.")
     latent = [r for r in flagged if r["matches_ref_native"]]
     print(f"- Flagged while the native output still matches the reference: {len(latent)} of {len(flagged)}.")
+    nearby = collections.Counter()
+    for r in aud:
+        nearby.update(r.get("nearby") or {})
+    if nearby:
+        print("- Runs at nearby shapes (one shape constant plus one, or all plus one): " + ", ".join(f"{k} {v}" for k, v in nearby.most_common()) + ".")
+        wrong = [r for r in aud if (r.get("nearby") or {}).get("silently wrong") or (r.get("nearby") or {}).get("crash")]
+        print(f"- Kernels that are silently wrong or crash at a nearby shape: {pct(len(wrong), len(aud))}.")
+    cfgm = [r for r in aud if r.get("config_mismatch")]
+    print(f"- Kernels whose output stops matching under another autotune config: {pct(len(cfgm), len(aud))}.")
     print("\nThese are detector flags. A flag becomes a confirmed bug only after a minimal reproduction and a root-cause label.\n")
     if flagged:
         print("| kernel | speedup | flags | first evidence |")
@@ -113,6 +140,9 @@ def main(argv: list[str]) -> int:
         "flagged": len(flagged),
         "exclusions": dict(excl),
         "flagged_kernels": [{"id": r["id"], "uuid": r["meta"].get("uuid"), "round": r["meta"].get("round"), "final_speedup": r["meta"].get("final_speedup"), "flags": r["flags"], "details": r["details"], "matches_ref_native": r["matches_ref_native"], "verifier": r["meta"].get("verifier")} for r in flagged],
+        "nearby_shape_outcomes": dict(nearby),
+        "config_mismatch_kernels": [r["id"] for r in cfgm],
+        "nearby_wrong_kernels": [r["id"] for r in aud if (r.get("nearby") or {}).get("silently wrong") or (r.get("nearby") or {}).get("crash")],
     }
     Path("pilot_summary.json").write_text(json.dumps(summary, indent=1, default=str))
     return 0
