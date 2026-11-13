@@ -51,25 +51,24 @@ tuning race, and round 4 was accepted with the same exposure.
 
 ## 3. Recheck of the flagged census kernels
 
-Run 43472135784 rechecked the flagged kernels under every autotune config, in
-eval and training mode, and replayed the five trials once per possible winner.
-Twenty-seven of 36 kernels had finished when this was written. The other nine
-have large inputs.
+Run 43472135784 rechecked all 36 flagged kernels under every autotune config,
+in eval and training mode, and replayed the five trials once per possible
+winner. Three kernels with large inputs hit the time budget before every
+config was covered.
 
 | Measure | Result |
 |---|---|
-| Uninitialized-output kernels with at least one partial config | 21 of 21 |
+| Uninitialized-output kernels with at least one partial config | 29 of 29 |
 | Of those, partial under every config | 5 |
-| Of those, partial under some configs | 16 |
-| Partial configs among the config-dependent kernels | 27 of 84 |
-| Replay shows pass, fail, fail, fail, fail exactly for the partial winners | 16 of 17 kernels checked |
-| Out-of-bounds kernels confirmed by both the sanitizer and the bounds oracle | 4 of 4 |
+| Of those, partial under some configs | 24 |
+| Partial configs among the config-dependent kernels | 39 of 116 |
+| Replay shows pass, fail, fail, fail, fail exactly for the partial winners | 20 of 22 kernels checked |
+| Out-of-bounds kernels confirmed by both the sanitizer and the bounds oracle | 5 of 5 |
 | Earlier false positives that are now clean | 2 of 2 |
-| Configs where the sanitizer and the bounds oracle disagree | 0 of 104 |
-| Kernels that behave differently in training mode | 2 of 27 |
+| Configs where the sanitizer and the bounds oracle disagree | 0 of 141 |
+| Kernels that behave differently in training mode | 3 of 36 |
 
-The two mode-dependent kernels, `228_r2` and `4163_r2`, fall back to PyTorch
-in training mode, so their Triton kernel never launches there.
+The three mode-dependent kernels are `1918_r2`, `228_r2` and `4163_r2`.
 
 ## 4. The exact bounds oracle
 
@@ -102,9 +101,42 @@ gave wrong output when one constant was increased by one.
 
 A population run should perturb named shape constants only.
 
-## 6. Still running
+## 6. Errors that the GPU harness itself recorded
+
+Run 43498539981 searched the recorded feedback of all 35,680 evaluated rounds.
+
+| Recorded on the GPU | Rounds | Accepted |
+|---|---|---|
+| Illegal memory access or device-side assert | 24 | 0 |
+| Index out of range | 47 | 0 |
+| Output mismatch | 1,606 | 0 |
+| Timeout | 429 | 0 |
+
+Crashing memory errors are rare in this corpus, at 24 of 35,680 rounds. The
+census found 5 silent out-of-bounds reads among 6,113 accepted best-round
+kernels. Scaled to the 21,956 accepted rounds, that is about 18. Silent
+out-of-bounds reads that pass are therefore about as common as the ones that
+crash and get rejected. The scaling assumes that best rounds are typical.
+
+Run 43499096153 rechecks the 24 crashing rounds on CPU. They are ground truth
+from a GPU, so the share that the CPU oracles flag is a recall estimate.
+
+## 7. One false positive of the bounds oracle, fixed
+
+The TritonGym sweep with the oracle, run 43475950907, flagged `f8_to_f16`
+through the oracle alone. The kernel is safe. `triton.reinterpret` wraps a
+tensor in an object the oracle did not recognise as memory of the kernel. The
+oracle now unwraps it. All seven confirmed reference bugs were flagged again,
+the four out-of-bounds ones by both the sanitizer and the oracle.
+
+Half of the repeat pilot had finished when this was written. On those 147
+kernels neither the sanitizer nor the oracle flagged anything, so they agree.
+
+## 8. Still running
 
 1. Run 43475965294 rechecks the 1,725 accepted rounds that L1 marks.
 2. Run 43475957047 rechecks the 453 rejected 1-of-5 rounds.
-3. Run 43475920247 repeats the 300-kernel pilot with the bounds oracle.
-4. Run 43475950907 repeats the TritonGym sweep with the bounds oracle.
+3. Run 43475920247 is the repeat pilot with the bounds oracle.
+4. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected.
+5. Run 43498607851 audits the whole accepted population at the benchmark's shape and at three nearby shapes, with the bounds oracle and the poison fill.
+6. Run 43499096153 rechecks the 24 rounds that crashed on the GPU.
