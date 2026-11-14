@@ -60,6 +60,9 @@ jobs:
           path: data/corpus2
       - name: Audit shard ${{ matrix.shard }}
         run: |
+          # A program that allocates without bound used to take the whole runner down, which also
+          # lost the shard's results. The limit turns that into an error for one program.
+          ulimit -v 11000000
           timeout --signal=INT 330m python pilot/drkernel/recheck.py --data data/corpus2/sample.jsonl --shard ${{ matrix.shard }}/8 \
             --modes eval --light --budget 300 --timeout 240 --out results/raw/corpus2_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
       - uses: actions/upload-artifact@v4
