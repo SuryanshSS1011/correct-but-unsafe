@@ -189,8 +189,9 @@ an odd shape, and those are most likely interpreter artifacts rather than
 defects. The reading is that the 0.56% census rate is specific to one shape and
 grows when the input shape moves.
 
-## 12. Still running
+## 12. A second corpus and the rejected base rate
 
-1. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected. Five of eight shards were stopped by the runner and were rerun. The three that finished give a base rate of 24 partial writes and 1 out-of-bounds read in 171 auditable rounds, which is 14%, far above the 0.56% of accepted kernels and consistent with rejected rounds being enriched for the defect.
-2. The Makora dynamic audit, run 43511475144, failed when the runner stopped its shards. It was rerun and is in progress.
-4. Run 43511475144 audits a sample of the Makora corpus. One of its eight shards was stopped by the runner and has to be rerun.
+1. The defect appears in a second corpus. Run 43559550729 audited a sample of the Makora corpus, which is `makora-ai/triton-gpu-latency`. Of the 230 uniformly sampled programs that ran, 3 returned a partial write, which is 1.3% with an interval of 0.4% to 3.8%, and 1 read out of bounds, which is 0.4%. So the pattern is not unique to Dr. Kernel. The Makora programs are unfiltered rather than accepted, so this rate is not directly comparable to the 0.56% of the census.
+2. The run rate on Makora was low. Of 939 audited programs, only 230 ran. 327 threw an exception on import or launch and 382 produced no runnable configuration, because the corpus is a latency dataset that holds many kernels the audit adapter cannot build.
+3. The 400 lint-marked Makora programs were not audited. Each shard processes its rows in order and stops itself after 330 minutes, and the marked rows sit at the end of the sample, so every shard timed out before reaching them. The enriched comparison, which is the stronger test of whether the fixed-grid pattern carries the defect in Makora, is therefore still open. Fixing it needs the marked rows audited first or in their own shards, not a plain rerun.
+4. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected in Dr. Kernel. Three of eight shards finished and give a base rate of 24 partial writes and 1 out-of-bounds read in 171 auditable rounds, which is 14.0% with an interval of 9.6% to 20.0%, far above the 0.56% of accepted kernels and consistent with rejected rounds being enriched for the defect. The other five shards were stopped by the runner.

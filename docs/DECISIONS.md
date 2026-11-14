@@ -30,6 +30,8 @@ source reading only. Grade C means inference.
 | 12 | A kernel with the defect is rejected about three times in four. | The recheck found 420 rejected rounds with a partial config and 150 accepted rounds, both lists complete. Partial configs are 30% to 40% of the configs in these kernels, so they win about twice as often as a uniform draw would give. | B |
 | 13 | The CPU detectors miss some errors that crash on a GPU. | Of the 24 rounds that recorded an illegal memory access or a device-side assert, 17 ran on CPU. The bounds oracle flagged 9 of them. Four of the misses run clean and correct on CPU, and also on an A100 with `CUDA_LAUNCH_BLOCKING=1`, so their recorded errors came from elsewhere in the worker. | A |
 | 14 | Stale allocator memory is a second way a partial write passes. | On an A100, 7 flagged kernels leave elements unwritten under the poison fill while every plain trial passes. Three of them have no autotuning, so their partial write is deterministic. 18 kernels return a marker value from a freed block in the unwritten region. | A |
+| 15 | The defect is far more common among rejected rounds. | A sample of compiled-and-rejected Dr. Kernel rounds had 24 partial writes and 1 out-of-bounds read in 171 auditable rounds, which is 14.0% with an interval of 9.6% to 20.0%, against 0.56% in the accepted population. Three of eight shards finished. | B |
+| 16 | The defect appears in a second corpus. | A dynamic audit of Makora found a partial write in 3 of 230 uniformly sampled programs that ran, which is 1.3%, and one out-of-bounds read. The 400 lint-marked programs timed out before audit, so the enriched comparison is open. | B |
 
 ## 2. What changed in the reading of the results
 
@@ -44,7 +46,7 @@ source reading only. Grade C means inference.
 | 1 | How often does a partial config win on a given GPU, and does stale allocator memory ever make a partial write pass? | On an A100, a partial config won in 17 of 20 cells of the minimal demonstration, and 19 of 29 uninitialized-output kernels left elements unwritten. Stale memory made the partial write pass for 7 kernels. See `results/2026-11-14-gpu.md`. A second GPU type has not been run. | Answered on one GPU. |
 | 2 | How many accepted rounds of any index have at least one partial config? | 150 of the 1,691 that ran, out of 1,725. | Answered. |
 | 3 | Is the 1-of-5 signature really the partial-write defect? | Yes. 420 of the 444 that ran have a partial config. | Answered. |
-| 4 | Does the rate hold outside this corpus? | Two corpora were approved. The traces corpus has 207 rows, never uses autotuning and calls kernels through a wrapper function, so it was not audited. The Makora corpus has 544,028 programs in the same format as KernelBench. In a static scan of 40,000 of them, 25.6% use autotuning and 3.2% match rule L1, against 11.3% of Dr. Kernel rounds. A dynamic audit of 1,500 sampled programs and 400 marked ones is running. | Free CI. No generation cost. |
+| 4 | Does the rate hold outside this corpus? | The defect appears in Makora, which is `makora-ai/triton-gpu-latency` with 544,028 programs. A static scan of 40,000 found 25.6% autotuned and 3.2% matching rule L1, against 11.3% of Dr. Kernel rounds. A dynamic audit found a partial write in 3 of 230 uniformly sampled programs that ran, which is 1.3%, and one out-of-bounds read. The 400 lint-marked programs timed out before they were audited, so the enriched comparison is still open. The other approved corpus, the traces set, has 207 rows, never autotunes and uses a wrapper function, so it was not audited. | Answered in part. Free CI. |
 | 5 | How many more kernels fail at a nearby shape? | A population run over all 6,230 kernels at the native shape and four constant-shifted shapes found about 27 more kernels with a partial write at a nearby shape, which roughly doubles the native-shape count. The figure is a lower bound and still needs the census triage. | Answered in part. |
 | 6 | Did the corpus harness run models in training or eval mode? | The released KernelGYM code never calls `eval()`. The decoy rate is 5.7% with and without a `self.training` guard, which fits eval mode. Of 36 rechecked kernels, 3 behave differently between modes. | Low impact. No action. |
 | 7 | Why do four kernels crash on a GPU and run clean on CPU? | `236:3`, `481:3`, `3725:4` and `6133:2` ran clean and correct on an A100 with `CUDA_LAUNCH_BLOCKING=1`. The recorded errors most likely came from another kernel in the same worker, not from a gap in the interpreter. | Answered. |
@@ -86,7 +88,7 @@ On an A100, outcomes 1 and 3 occurred. The mechanism is stated without qualifica
 | The harness ran in a different mode from the audit. | Rechecked in both modes. Three of 36 differ, because their kernel does not launch in training mode. |
 | The static rule over-approximates. | It marks kernels whose tuned parameter is consumed by a loop inside the kernel, including four human-written TritonBench references that are safe. Only the dynamic check per config counts as a finding. |
 | 117 kernels could not be audited. | 102 are timeouts on large inputs. They are 1.9% of the population and are reported as exclusions. |
-| One corpus from one model family. | Open. The Makora audit is running. See D4. |
+| One corpus from one model family. | Eased. The defect appears in Makora too, at 1.3% of runnable uniform programs. The lint-marked Makora programs still need auditing. See D4. |
 | The CPU detectors have limited recall. | Against 17 runnable kernels that crashed on a GPU, the bounds oracle flagged 9. The out-of-bounds count of 5 among accepted kernels is therefore a lower bound. |
 | Related work on stale memory in kernel evaluation exists. | An industry report from Wafer describes a kernel that read uninitialized memory and passed a tolerance check. It proposes a bitwise determinism check and clears the allocator cache between timing iterations. Whether that catches the config-dependent class has not been tested here, and the paper has to position against it. |
 
@@ -100,7 +102,7 @@ On an A100, outcomes 1 and 3 occurred. The mechanism is stated without qualifica
 ## 7. Order of work for the next two weeks
 
 1. Done on an A100. A second GPU type, such as a T4, would show whether the winning config differs between GPUs.
-2. Fold in the Makora audit, the nearby-shape population run and the sample of rejected rounds when they finish.
+2. Audit the 400 lint-marked Makora programs, which timed out in run 43559550729, to get the enriched second-corpus comparison.
 3. Review and file the TritonGym report and the two Triton drafts in `reports/`.
-4. Decide on a further corpus only if the Makora result is ambiguous.
+4. Decide on a further corpus only if the enriched Makora result is ambiguous.
 5. Write the paper around D1, with the census and the reference bugs as supporting sections.
