@@ -1,0 +1,28 @@
+name: index-contracts
+
+# Static feasibility count for the dropped-index-bounds track. It parses the
+# corpus and executes no kernel, so it holds no secrets and needs no GPU.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install datasets
+      - name: Static index-contract scan over the whole corpus
+        run: python tools/index_contracts.py --out-dir results/raw/index_contracts | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: index-contracts
+          path: results/raw/index_contracts/
+          retention-days: 60
