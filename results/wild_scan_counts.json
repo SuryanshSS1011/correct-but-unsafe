@@ -1,0 +1,362 @@
+{
+ "AlibabaPAI/FLASHNN": {
+  "files_with_triton": 41,
+  "kernels": 31,
+  "autotuned": 6,
+  "autotuned_shape": 2,
+  "autotuned_unresolved": 0,
+  "launch_sites": 10,
+  "L1_static_marks": 1
+ },
+ "BlinkDL/RWKV-LM": {
+  "files_with_triton": 0,
+  "kernels": 0,
+  "autotuned": 0,
+  "autotuned_shape": 0,
+  "autotuned_unresolved": 0,
+  "launch_sites": 0,
+  "L1_static_marks": 0
+ },
+ "BobMcDear/attorch": {
+  "files_with_triton": 28,
+  "kernels": 82,
+  "autotuned": 22,
+  "autotuned_shape": 0,
+  "autotuned_unresolved": 20,
+  "launch_sites": 27,
+  "L1_static_marks": 0
+ },
+ "Dao-AILab/flash-attention": {
+  "files_with_triton": 35,
+  "kernels": 28,
+  "autotuned": 5,
+  "autotuned_shape": 3,
+  "autotuned_unresolved": 0,
+  "launch_sites": 10,
+  "L1_static_marks": 0
+ },
+ "IST-DASLab/HALO": {
+  "files_with_triton": 9,
+  "kernels": 7,
+  "autotuned": 6,
+  "autotuned_shape": 2,
+  "autotuned_unresolved": 0,
+  "launch_sites": 6,
+  "L1_static_marks": 0
+ },
+ "JonasGeiping/linear_cross_entropy_loss": {
+  "files_with_triton": 31,
+  "kernels": 96,
+  "autotuned": 73,
+  "autotuned_shape": 60,
+  "autotuned_unresolved": 1,
+  "launch_sites": 67,
+  "L1_static_marks": 0
+ },
+ "Lightning-AI/lit-llama": {
+  "files_with_triton": 1,
+  "kernels": 1,
+  "autotuned": 1,
+  "autotuned_shape": 1,
+  "autotuned_unresolved": 0,
+  "launch_sites": 2,
+  "L1_static_marks": 0
+ },
+ "NVIDIA/Megatron-LM": {
+  "files_with_triton": 155,
+  "kernels": 210,
+  "autotuned": 44,
+  "autotuned_shape": 39,
+  "autotuned_unresolved": 0,
+  "launch_sites": 157,
+  "L1_static_marks": 8
+ },
+ "NVIDIA/physicsnemo": {
+  "files_with_triton": 39,
+  "kernels": 72,
+  "autotuned": 4,
+  "autotuned_shape": 2,
+  "autotuned_unresolved": 2,
+  "launch_sites": 29,
+  "L1_static_marks": 2
+ },
+ "OpenMOSE/RWKV-LM-RLHF": {
+  "files_with_triton": 132,
+  "kernels": 342,
+  "autotuned": 212,
+  "autotuned_shape": 89,
+  "autotuned_unresolved": 0,
+  "launch_sites": 283,
+  "L1_static_marks": 17
+ },
+ "ROCm/aiter": {
+  "files_with_triton": 914,
+  "kernels": 1495,
+  "autotuned": 46,
+  "autotuned_shape": 21,
+  "autotuned_unresolved": 12,
+  "launch_sites": 577,
+  "L1_static_marks": 2
+ },
+ "SandAI-org/MagiCompiler": {
+  "files_with_triton": 17,
+  "kernels": 2,
+  "autotuned": 1,
+  "autotuned_shape": 1,
+  "autotuned_unresolved": 0,
+  "launch_sites": 2,
+  "L1_static_marks": 0
+ },
+ "alibaba/TorchEasyRec": {
+  "files_with_triton": 26,
+  "kernels": 29,
+  "autotuned": 12,
+  "autotuned_shape": 3,
+  "autotuned_unresolved": 0,
+  "launch_sites": 19,
+  "L1_static_marks": 0
+ },
+ "databricks/flashoptim": {
+  "files_with_triton": 3,
+  "kernels": 12,
+  "autotuned": 2,
+  "autotuned_shape": 2,
+  "autotuned_unresolved": 0,
+  "launch_sites": 9,
+  "L1_static_marks": 2
+ },
+ "facebookresearch/xformers": {
+  "files_with_triton": 28,
+  "kernels": 8,
+  "autotuned": 1,
+  "autotuned_shape": 0,
+  "autotuned_unresolved": 0,
+  "launch_sites": 8,
+  "L1_static_marks": 0
+ },
+ "fla-org/flash-linear-attention": {
+  "files_with_triton": 333,
+  "kernels": 644,
+  "autotuned": 287,
+  "autotuned_shape": 141,
+  "autotuned_unresolved": 0,
+  "launch_sites": 506,
+  "L1_static_marks": 34
+ },
+ "fla-org/native-sparse-attention": {
+  "files_with_triton": 5,
+  "kernels": 12,
+  "autotuned": 7,
+  "autotuned_shape": 0,
+  "autotuned_unresolved": 0,
+  "launch_sites": 9,
+  "L1_static_marks": 0
+ },
+ "flagos-ai/FlagAttention": {
+  "files_with_triton": 242,
+  "kernels": 1005,
+  "autotuned": 245,
+  "autotuned_shape": 112,
+  "autotuned_unresolved": 27,
+  "launch_sites": 673,
+  "L1_static_marks": 44
+ },
+ "flagos-ai/FlagGems": {
+  "files_with_triton": 4469,
+  "kernels": 13440,
+  "autotuned": 792,
+  "autotuned_shape": 322,
+  "autotuned_unresolved": 428,
+  "launch_sites": 10292,
+  "L1_static_marks": 44
+ },
+ "huggingface/kernels-community": {
+  "files_with_triton": 627,
+  "kernels": 1358,
+  "autotuned": 399,
+  "autotuned_shape": 189,
+  "autotuned_unresolved": 53,
+  "launch_sites": 835,
+  "L1_static_marks": 36
+ },
+ "hustvl/mmMamba": {
+  "files_with_triton": 46,
+  "kernels": 149,
+  "autotuned": 40,
+  "autotuned_shape": 18,
+  "autotuned_unresolved": 0,
+  "launch_sites": 149,
+  "L1_static_marks": 5
+ },
+ "kijai/ComfyUI-SolAttn_triton": {
+  "files_with_triton": 7,
+  "kernels": 10,
+  "autotuned": 7,
+  "autotuned_shape": 2,
+  "autotuned_unresolved": 0,
+  "launch_sites": 10,
+  "L1_static_marks": 0
+ },
+ "linkedin/Liger-Kernel": {
+  "files_with_triton": 162,
+  "kernels": 208,
+  "autotuned": 13,
+  "autotuned_shape": 13,
+  "autotuned_unresolved": 0,
+  "launch_sites": 217,
+  "L1_static_marks": 0
+ },
+ "lucidrains/triton-transformer": {
+  "files_with_triton": 10,
+  "kernels": 9,
+  "autotuned": 1,
+  "autotuned_shape": 1,
+  "autotuned_unresolved": 0,
+  "launch_sites": 8,
+  "L1_static_marks": 0
+ },
+ "microsoft/SeerAttention": {
+  "files_with_triton": 19,
+  "kernels": 40,
+  "autotuned": 16,
+  "autotuned_shape": 0,
+  "autotuned_unresolved": 0,
+  "launch_sites": 34,
+  "L1_static_marks": 0
+ },
+ "microsoft/dion": {
+  "files_with_triton": 18,
+  "kernels": 9,
+  "autotuned": 3,
+  "autotuned_shape": 3,
+  "autotuned_unresolved": 0,
+  "launch_sites": 6,
+  "L1_static_marks": 0
+ },
+ "mit-han-lab/EvolvingInfra": {
+  "files_with_triton": 606,
+  "kernels": 635,
+  "autotuned": 33,
+  "autotuned_shape": 22,
+  "autotuned_unresolved": 0,
+  "launch_sites": 583,
+  "L1_static_marks": 9
+ },
+ "pytorch/FBGEMM": {
+  "files_with_triton": 85,
+  "kernels": 110,
+  "autotuned": 33,
+  "autotuned_shape": 22,
+  "autotuned_unresolved": 6,
+  "launch_sites": 81,
+  "L1_static_marks": 12
+ },
+ "pytorch/ao": {
+  "files_with_triton": 166,
+  "kernels": 116,
+  "autotuned": 55,
+  "autotuned_shape": 26,
+  "autotuned_unresolved": 21,
+  "launch_sites": 103,
+  "L1_static_marks": 12
+ },
+ "pytorch/pytorch": {
+  "files_with_triton": 463,
+  "kernels": 405,
+  "autotuned": 35,
+  "autotuned_shape": 21,
+  "autotuned_unresolved": 1,
+  "launch_sites": 567,
+  "L1_static_marks": 11
+ },
+ "sgl-project/sgl-kernel-npu": {
+  "files_with_triton": 223,
+  "kernels": 209,
+  "autotuned": 17,
+  "autotuned_shape": 17,
+  "autotuned_unresolved": 0,
+  "launch_sites": 193,
+  "L1_static_marks": 15
+ },
+ "sgl-project/sglang": {
+  "files_with_triton": 1679,
+  "kernels": 1576,
+  "autotuned": 39,
+  "autotuned_shape": 29,
+  "autotuned_unresolved": 0,
+  "launch_sites": 1214,
+  "L1_static_marks": 9
+ },
+ "state-spaces/mamba": {
+  "files_with_triton": 41,
+  "kernels": 63,
+  "autotuned": 43,
+  "autotuned_shape": 27,
+  "autotuned_unresolved": 0,
+  "launch_sites": 49,
+  "L1_static_marks": 1
+ },
+ "thu-pacman/chitu": {
+  "files_with_triton": 138,
+  "kernels": 131,
+  "autotuned": 23,
+  "autotuned_shape": 15,
+  "autotuned_unresolved": 3,
+  "launch_sites": 110,
+  "L1_static_marks": 1
+ },
+ "togethercomputer/xorl": {
+  "files_with_triton": 158,
+  "kernels": 143,
+  "autotuned": 33,
+  "autotuned_shape": 17,
+  "autotuned_unresolved": 0,
+  "launch_sites": 106,
+  "L1_static_marks": 2
+ },
+ "triton-lang/triton": {
+  "files_with_triton": 350,
+  "kernels": 2634,
+  "autotuned": 34,
+  "autotuned_shape": 12,
+  "autotuned_unresolved": 19,
+  "launch_sites": 1542,
+  "L1_static_marks": 1
+ },
+ "turboderp-org/exllamav3": {
+  "files_with_triton": 55,
+  "kernels": 84,
+  "autotuned": 18,
+  "autotuned_shape": 12,
+  "autotuned_unresolved": 0,
+  "launch_sites": 61,
+  "L1_static_marks": 3
+ },
+ "unslothai/unsloth": {
+  "files_with_triton": 336,
+  "kernels": 188,
+  "autotuned": 3,
+  "autotuned_shape": 3,
+  "autotuned_unresolved": 0,
+  "launch_sites": 83,
+  "L1_static_marks": 0
+ },
+ "unslothai/unsloth-zoo": {
+  "files_with_triton": 236,
+  "kernels": 202,
+  "autotuned": 66,
+  "autotuned_shape": 32,
+  "autotuned_unresolved": 1,
+  "launch_sites": 137,
+  "L1_static_marks": 7
+ },
+ "vllm-project/vllm": {
+  "files_with_triton": 903,
+  "kernels": 1169,
+  "autotuned": 53,
+  "autotuned_shape": 35,
+  "autotuned_unresolved": 2,
+  "launch_sites": 773,
+  "L1_static_marks": 9
+ }
+}
