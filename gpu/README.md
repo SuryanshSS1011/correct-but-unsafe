@@ -1,8 +1,8 @@
 # GPU confirmation kit
 
 Everything in the rest of this repository runs on CPU. These two scripts are
-the only part that needs a GPU. They have been dry-run on the CPU interpreter
-and have not yet been run on a GPU.
+the only part that needs a GPU. They ran on an A100 through Modal on 14 November
+2026. The results are in `results/2026-11-14-gpu.md`.
 
 The kernels they execute are model-generated code from a public corpus. Run
 them in a container or a batch job, not in a session that holds credentials.
@@ -64,10 +64,10 @@ came from elsewhere in the worker.
 
 ## Launchers
 
-1. **Modal:** `modal run gpu/modal_app.py`. Set `CBU_GPU=T4` or another type to compare GPUs.
+1. **Modal:** `modal run gpu/modal_app.py` runs all three parts, one GPU container per kernel, and writes to `results/raw/`. Set `CBU_GPU=T4` or another type to compare GPUs.
 2. **Roar:** fill in the account and partition in `gpu/roar.sbatch`, do the setup on a login node as its header describes, then `sbatch gpu/roar.sbatch`.
 
-Neither launcher has been run. Running on two GPU types is useful, because the winning autotune config can differ between them.
+The Modal launcher has run on an A100. The Roar launcher has not been run. Running on two GPU types is useful, because the winning autotune config can differ between them.
 
 ## Optional: NVIDIA Compute Sanitizer
 
