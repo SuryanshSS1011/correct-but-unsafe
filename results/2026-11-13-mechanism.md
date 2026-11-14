@@ -135,19 +135,17 @@ kernels neither the sanitizer nor the oracle flagged anything, so they agree.
 ## 8. The 1-of-5 signature, checked dynamically
 
 Runs 43475957047 and 43475965294 audited every autotune config of the rounds
-that the lint marks. The rejected list is complete. The accepted list covers
-the 11 of 12 shards that had finished, which is 1,581 of 1,725 rounds.
+that the lint marks. Both lists are now complete.
 
 | Group | Ran on CPU | At least one partial config | Partial under every config | Partial configs in the config-dependent kernels |
 |---|---|---|---|---|
 | Rejected with exactly 1 of 5 trials passed | 444 of 453 | 420, 94.6% | 2 | 823 of 2,030 |
-| Accepted | 1,552 of 1,581 | 136, 8.8% | 3 | 194 of 655 |
+| Accepted | 1,691 of 1,725 | 150, 8.9% | 3 | 213 of 718 |
 
-The rejected list has 420 rounds with a partial config. Scaled to the full
-list, about 150 accepted rounds carry one. A kernel with the defect was therefore rejected
-about three times in four. Partial configs are 30% to 40% of the configs, so
-they win about twice as often as a uniform draw would give, which fits a
-smaller block being faster.
+The rejected list has 420 rounds with a partial config, and the accepted list
+has 150. A kernel with the defect was therefore rejected about three times in
+four. Partial configs are 30% to 40% of the configs, so they win about twice as
+often as a uniform draw would give, which fits a smaller block being faster.
 
 ## 9. Recall against kernels that crashed on the GPU
 
@@ -177,9 +175,22 @@ kernels is a lower bound.
 2. The traces corpus has 207 rows. None uses autotuning, and its kernels are called through a wrapper function with explicit weights, which the harness does not support. It was not audited.
 3. The Makora corpus has 544,028 programs. A static scan of 40,000 of them found `triton.autotune` in 10,229, which is 25.6%, and rule L1 in 1,263, which is 3.2% with an interval of 3.0% to 3.3%. The same rule marks 11.3% of Dr. Kernel rounds. Run 43511475144 audits 1,500 sampled programs and 400 marked ones. Two earlier runs failed on a schema difference between the train and test files.
 
-## 11. Still running
+## 11. Nearby shapes double the partial-write population
 
-1. The last shard of run 43475965294.
-2. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected.
-3. Run 43498607851 audits the whole accepted population at the benchmark's shape and at three nearby shapes.
+Run 43498607851 audited all 6,230 accepted kernels at the benchmark's own
+shape and at four variants that raise one or more integer constants by a small
+amount. At the native shape the run reproduces 24 partial writes and 3
+out-of-bounds reads. Raising a constant surfaces about 27 more kernels that
+return a partial write at a nearby shape but not at the native one. The native
+count is lower than the census figure of 29 because this run used fewer
+autotune configs per kernel, so the extra 27 should be read as a lower bound
+and still need the census triage. A further 362 kernels only crash or error at
+an odd shape, and those are most likely interpreter artifacts rather than
+defects. The reading is that the 0.56% census rate is specific to one shape and
+grows when the input shape moves.
+
+## 12. Still running
+
+1. Run 43498603107 audits a random sample of 1,200 of the 11,234 rounds that compiled and were rejected. Five of eight shards were stopped by the runner and were rerun. The three that finished give a base rate of 24 partial writes and 1 out-of-bounds read in 171 auditable rounds, which is 14%, far above the 0.56% of accepted kernels and consistent with rejected rounds being enriched for the defect.
+2. The Makora dynamic audit, run 43511475144, failed when the runner stopped its shards. It was rerun and is in progress.
 4. Run 43511475144 audits a sample of the Makora corpus. One of its eight shards was stopped by the runner and has to be rerun.
