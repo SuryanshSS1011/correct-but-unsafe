@@ -17,7 +17,7 @@ byte-identical outputs, with earlier outputs kept alive.
 ## 2. Matching the two audits
 
 1. Every one of the 3,134 ids is a `uuid` of the corpus.
-2. For 2,330 ids the `final_speedup` in their rows equals the speedup of the best round in the corpus, so both audits looked at the same kernel. For the other 804 no round matches, and they are left out of nothing below, because every kernel used in section 3 was matched individually.
+2. For 2,330 ids the `final_speedup` in their rows equals the speedup of the best round in the corpus, so both audits looked at the same kernel. For the other 804 no round matches. That does not affect the census kernels in section 3, because each of them was matched individually.
 
 ## 3. Results
 
