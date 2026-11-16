@@ -13,6 +13,9 @@ on:
       n:
         description: "uniform sample size"
         default: "1500"
+      l1_only:
+        description: "audit only the lint-marked programs (true or false)"
+        default: "false"
 
 permissions:
   contents: read
@@ -29,7 +32,7 @@ jobs:
       - run: pip install datasets
       - name: Lint and sample
         shell: bash
-        run: python tools/sample_corpus.py --corpus "${{ inputs.corpus || 'makora' }}" --n "${{ inputs.n || '1500' }}" --out-dir data/corpus2 | tee -a "$GITHUB_STEP_SUMMARY"
+        run: python tools/sample_corpus.py --corpus "${{ inputs.corpus || 'makora' }}" --n "${{ inputs.n || '1500' }}" ${{ inputs.l1_only == 'true' && '--l1-only' || '' }} --out-dir data/corpus2 | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: corpus2-sample

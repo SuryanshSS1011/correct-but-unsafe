@@ -39,6 +39,8 @@ def main() -> int:
     ap.add_argument("--lint-n", type=int, default=40000)
     ap.add_argument("--seed", type=int, default=20261113)
     ap.add_argument("--out-dir", default="data/corpus2")
+    ap.add_argument("--l1-only", action="store_true",
+                    help="write only the lint-marked programs, so the audit is not starved by the uniform rows at the head")
     a = ap.parse_args()
     from datasets import load_dataset
 
@@ -108,10 +110,14 @@ def main() -> int:
              f"- Allocate with torch.empty or a relative: {wilson(c['empty'], c['rows'])}"]
     print("\n".join(lines))
 
-    pool = rng.sample(range(n), min(n, a.n * 5))
-    uniform = [i for i in pool if view(ds[i])[2]][: a.n]
-    chosen = set(uniform)
-    extra = [i for i in marked if i not in chosen][:400]  # the rare class, so it is represented
+    if a.l1_only:
+        uniform = []
+        extra = [i for i in marked if view(ds[i])[2]][:600]  # every runnable marked program, so the enriched rate is measured
+    else:
+        pool = rng.sample(range(n), min(n, a.n * 5))
+        uniform = [i for i in pool if view(ds[i])[2]][: a.n]
+        chosen = set(uniform)
+        extra = [i for i in marked if i not in chosen][:400]  # the rare class, so it is represented
     with open(out / "sample.jsonl", "w") as fo:
         for stratum, idxs in (("uniform", uniform), ("l1", extra)):
             for i in idxs:
