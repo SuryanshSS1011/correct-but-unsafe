@@ -117,6 +117,44 @@ def hardware(sets: dict[str, Path]) -> None:
             )
 
 
+T4_CLEAN = [
+    "1586_r2",
+    "1797_r3",
+    "2121_r2",
+    "5338_r2",
+    "6897_r4",
+    "6993_r1",
+    "703_r1",
+    "8853_r2",
+    "984_r2",
+]
+
+
+def timing_check(sets: dict[str, Path]) -> None:
+    """Rule out compile failures as the cause of the GPU difference.
+
+    Triton scores a config that fails to compile as infinite, so it can never win.
+    Each timing is [median, p20, p80] and the winner is the lexicographic minimum.
+    """
+    print("\n== timings of the kernels that are clean on the T4 and leak elsewhere")
+    for g, d in sets.items():
+        ks = {k["id"]: k for k in load(d, "gpu_confirmation.json")["kernels"]}
+        results = infinite = tied = 0
+        for kid in T4_CLEAN:
+            for r in ks[kid]["runs"]:
+                for a in r.get("autotuned") or []:
+                    if not a.get("timings") or a["winner_index"] is None:
+                        continue
+                    medians = [t[0] for t in a["timings"].values()]
+                    results += 1
+                    infinite += sum(m == float("inf") for m in medians)
+                    tied += medians.count(medians[a["winner_index"]]) > 1
+        print(
+            f"{g}: {results} tuning results, {infinite} infinite config timings, "
+            f"winner's median tied exactly with another config in {tied}"
+        )
+
+
 def cache(base: Path, cached: Path) -> None:
     c = load(cached, "gpu_confirmation.json")
     if not c:
@@ -172,7 +210,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default="results/raw")
     raw = Path(ap.parse_args().raw)
-    hardware({"T4": raw / "t4", "A100": raw, "H100": raw / "h100"})
+    sets = {"T4": raw / "t4", "A100": raw, "H100": raw / "h100"}
+    hardware(sets)
+    timing_check(sets)
     cache(raw, raw / "a100-cache")
     return 0
 
