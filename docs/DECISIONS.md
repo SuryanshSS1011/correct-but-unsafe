@@ -20,7 +20,7 @@ source reading only. Grade C means inference.
 | 2 | TritonGym still has seven buggy reference kernels after its fix. | Flagged by concrete detectors among 114 references that ran, and each confirmed by reading the source. | B |
 | 3 | 34 of 6,113 accepted Dr. Kernel kernels have a memory-safety defect, which is 0.56% with an interval of 0.40% to 0.78%. | Census of the whole accepted population. 29 return partly uninitialized output and 5 read out of bounds. | B |
 | 4 | Triton's autotuner hides a partial write on the first call. | The Triton documentation states that every config runs on the real arguments during tuning. A CPU replay of KernelGYM's five trials shows pass, fail, fail, fail, fail exactly when a partial config is the winner. On an A100, 17 flagged kernels show the same signature natively. | A |
-| 5 | Partial configs do win on real GPUs. | In KernelGYM's own records, 453 of 675 failing rounds with the fixed-grid pattern passed exactly 1 of 5 trials. The rate is 67.1%. It is 11.6% for other autotuned kernels and 2.9% for kernels without autotuning. A CPU recheck of those 453 rounds found a partial config in 420 of the 444 that ran, which is 94.6%. On an A100 a partial config won in 17 of 20 size and repeat cells of the minimal demonstration. | A |
+| 5 | Partial configs do win on real GPUs. | In KernelGYM's own records, 453 of 675 failing rounds with the fixed-grid pattern passed exactly 1 of 5 trials. The rate is 67.1%. It is 11.6% for other autotuned kernels and 2.9% for kernels without autotuning. A CPU recheck of those 453 rounds found a partial config in 420 of the 444 that ran, which is 94.6%. A partial config won in 15 of 20 size and repeat cells of the minimal demonstration on a T4, 16 of 20 on an A100 and 18 of 20 on an H100. | A |
 | 6 | Acceptance of such a kernel is not determined by its code. | Trajectory 8676 kept the same fixed grid and the same five configs in rounds 3 and 4. Round 3 passed 1 of 5 trials and round 4 passed 5 of 5. The CPU replay gives the same two signatures for the two possible kinds of winner. On an A100, six flagged kernels pass all five trials in some fresh processes and fail 1 of 5 in others. | A |
 | 7 | The fixed-grid pattern lowers acceptance. | 42.7% of 4,044 rounds with the pattern were accepted, against 66.6% of 8,119 autotuned rounds whose grid depends on the config. | A |
 | 8 | The model usually repairs the pattern after a failure. | After a 1-of-5 failure, 384 of 453 next rounds use a grid that depends on the config, and 311 of those were accepted. | A |
@@ -28,10 +28,12 @@ source reading only. Grade C means inference.
 | 10 | AddressSanitizer on the interpreter and an exact bounds oracle agree. | They agree on all 37 flagged cases of the positive control, on all 141 configs of the 36 flagged kernels, and on a random sample of 298 accepted kernels, where neither flags anything. | B |
 | 11 | A static rule finds the config-dependent class. | Rule L1 marks 23 of the 24 config-dependent census kernels. It also marks 281 accepted best-round kernels that the census did not flag, so it over-approximates. | B |
 | 12 | A kernel with the defect is rejected about three times in four. | The recheck found 420 rejected rounds with a partial config and 150 accepted rounds, both lists complete. Partial configs are 30% to 40% of the configs in these kernels, so they win about twice as often as a uniform draw would give. | B |
-| 13 | The CPU detectors miss some errors that crash on a GPU. | Of the 24 rounds that recorded an illegal memory access or a device-side assert, 17 ran on CPU. The bounds oracle flagged 9 of them. Four of the misses run clean and correct on CPU, and also on an A100 with `CUDA_LAUNCH_BLOCKING=1`, so their recorded errors came from elsewhere in the worker. | A |
-| 14 | Stale allocator memory is a second way a partial write passes. | On an A100, 7 flagged kernels leave elements unwritten under the poison fill while every plain trial passes. Three of them have no autotuning, so their partial write is deterministic. 18 kernels return a marker value from a freed block in the unwritten region. | A |
+| 13 | The CPU detectors miss some errors that crash on a GPU. | Of the 24 rounds that recorded an illegal memory access or a device-side assert, 17 ran on CPU. The bounds oracle flagged 9 of them. Four of the misses run clean on CPU, and also on a T4, an A100 and an H100 with `CUDA_LAUNCH_BLOCKING=1`, so their recorded errors came from elsewhere in the worker. On the H100 one of them, `6133_r2`, gives a numerical mismatch without any unwritten element. | A |
+| 14 | Stale allocator memory is a second way a partial write passes. | On an A100, 7 flagged kernels leave elements unwritten under the poison fill while every plain trial passes, and 5 do so on a T4 and on an H100. Three of them have no autotuning, so their partial write is deterministic. 18 kernels return a marker value from a freed block in the unwritten region on an A100. | A |
 | 15 | The defect is far more common among rejected rounds. | A sample of compiled-and-rejected Dr. Kernel rounds had 24 partial writes and 1 out-of-bounds read in 171 auditable rounds, which is 14.0% with an interval of 9.6% to 20.0%, against 0.56% in the accepted population. Three of eight shards finished. | B |
 | 16 | The defect appears in a second corpus, and the lint selects it there too. | A dynamic audit of Makora found a partial write in 3 of 230 uniformly sampled programs that ran, which is 1.3%, and in 28 of 100 lint-marked programs that ran, which is 28.0% with an interval of 20.1% to 37.5%. The enrichment is about 20 times, the same direction as in Dr. Kernel. | B |
+| 17 | Whether a kernel leaks depends on the GPU type. | With the same code, inputs and software, 9 flagged kernels never left an element unwritten in 12 fresh processes on a T4 and did on an A100 or an H100. Two others leak only on the T4. The autotune winner differs between the GPUs. The out-of-bounds read of `7350_r1` faults on the A100 and the H100 and passes every trial on the T4. See `results/2026-11-17-gpu.md`. | A |
+| 18 | The autotuner's disk cache removes the covered first call. | With `TRITON_CACHE_AUTOTUNING=1` on an A100, all 273 later processes loaded the cached winner without tuning. Plain runs that passed only the first trial fell from 46 to 0, and runs that passed no trial rose from 6 to 60. After a restart, the first call of a deployed kernel is already partial. | A |
 
 ## 2. What changed in the reading of the results
 
@@ -43,7 +45,7 @@ source reading only. Grade C means inference.
 
 | # | Open question | What resolves it | Cost |
 |---|---|---|---|
-| 1 | How often does a partial config win on a given GPU, and does stale allocator memory ever make a partial write pass? | On an A100, a partial config won in 17 of 20 cells of the minimal demonstration, and 19 of 29 uninitialized-output kernels left elements unwritten. Stale memory made the partial write pass for 7 kernels. See `results/2026-11-14-gpu.md`. A second GPU type has not been run. | Answered on one GPU. |
+| 1 | How often does a partial config win on a given GPU, and does stale allocator memory ever make a partial write pass? | A partial config won in 15, 16 and 18 of 20 cells of the minimal demonstration on a T4, an A100 and an H100. 15, 19 and 21 of the 34 flagged kernels left elements unwritten, and stale memory made the partial write pass for 5, 7 and 5. See `results/2026-11-14-gpu.md` and `results/2026-11-17-gpu.md`. | Answered on three GPUs. |
 | 2 | How many accepted rounds of any index have at least one partial config? | 150 of the 1,691 that ran, out of 1,725. | Answered. |
 | 3 | Is the 1-of-5 signature really the partial-write defect? | Yes. 420 of the 444 that ran have a partial config. | Answered. |
 | 4 | Does the rate hold outside this corpus? | Yes. The defect appears in Makora, which is `makora-ai/triton-gpu-latency` with 544,028 programs. A static scan of 40,000 found 25.6% autotuned and 3.2% matching rule L1, against 11.3% of Dr. Kernel rounds. A dynamic audit found a partial write in 3 of 230 uniformly sampled programs that ran, which is 1.3%, and in 28 of 100 lint-marked programs, which is 28.0%, an enrichment of about 20 times. The other approved corpus, the traces set, has 207 rows, never autotunes and uses a wrapper function, so it was not audited. | Answered. Free CI. |
@@ -61,7 +63,7 @@ source reading only. Grade C means inference.
 2. A partial config never wins on that GPU at any size. The claim narrows to the GPU model used for the corpus, and the paper leans on the corpus records for evidence.
 3. A partial write passes without the poison fill. Stale memory is a second mechanism and deserves its own paragraph.
 
-On an A100, outcomes 1 and 3 occurred. The mechanism is stated without qualification, and stale memory gets its own paragraph.
+On a T4, an A100 and an H100, outcomes 1 and 3 occurred. The mechanism is stated without qualification, and stale memory gets its own paragraph. The kernels that leak differ between the three GPUs, which claim 17 records.
 
 **D3. No audit of all 21,956 accepted rounds.** The lint selects the rounds that can carry the config-dependent class, and those are being rechecked. The remaining classes occur at about 0.1% to 0.2%, so a full audit would add roughly 20 to 40 kernels at four times the census cost. It is deferred unless a reviewer asks for it.
 
@@ -74,7 +76,7 @@ On an A100, outcomes 1 and 3 occurred. The mechanism is stated without qualifica
 3. Triton: a warning when an autotuned kernel is launched with a grid that is not callable.
 4. KernelGYM: run each autotune config separately and fill fresh allocations with a pattern.
 
-**D6. The mitigation is part of the contribution.** Two checks would have rejected all 34 census kernels. The poison fill with one run per autotune config catches the 29 partial writes, and the bounds oracle catches the 5 out-of-bounds reads. Both run on CPU.
+**D6. The mitigation is part of the contribution.** Two checks would have rejected all 34 census kernels. The poison fill with one run per autotune config catches the 29 partial writes, and the bounds oracle catches the 5 out-of-bounds reads. Both run on CPU. Because the first check runs every config, it does not depend on which config wins on a given GPU, and claim 17 shows that this varies. A check on one CI GPU type does not have that property.
 
 **D7. Scope of claims.** Every number is stated for the audited inputs, which are the benchmark's own shape and up to four autotune configs in the census. The paper does not claim the absence of defects elsewhere.
 
@@ -97,11 +99,11 @@ On an A100, outcomes 1 and 3 occurred. The mechanism is stated without qualifica
 1. **Accepted rounds with a partial config.** The rule was that a count above 50 keeps D1. The final count is 150, so D1 stands.
 2. **Rejected 1-of-5 rounds with a partial config.** The rule was that a share above 80% validates the signature. The share is 94.6%, so claim 5 stands.
 3. **Sanitizer against the bounds oracle on the pilot sample.** The rule was that any kernel flagged by the oracle alone triggers a second census. There is none among 298 kernels, so the census numbers stand. A population run with the oracle at nearby shapes is running for a different reason, which is open question 5.
-4. **GPU kit.** The rules were outcomes 1 to 3 of D2. Outcomes 1 and 3 occurred on an A100, so claims 4 to 6 gain direct GPU evidence, claim 13 moves to grade A and claim 14 is added.
+4. **GPU kit.** The rules were outcomes 1 to 3 of D2. Outcomes 1 and 3 occurred on an A100, so claims 4 to 6 gain direct GPU evidence, claim 13 moves to grade A and claim 14 is added. They occurred again on a T4 and an H100, which added claims 17 and 18.
 
 ## 7. Order of work for the next two weeks
 
-1. Done on an A100. A second GPU type, such as a T4, would show whether the winning config differs between GPUs.
+1. Done on a T4, an A100 and an H100, and with the disk cache on an A100. The winning config, and so the leak, differs between GPUs.
 2. The enriched Makora comparison is done, at 28.0% of lint-marked programs against 1.3% of uniform ones.
 3. Review and file the TritonGym report and the two Triton drafts in `reports/`.
 4. No further corpus is needed. The Makora result is clear.

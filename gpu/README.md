@@ -2,7 +2,9 @@
 
 Everything in the rest of this repository runs on CPU. These two scripts are
 the only part that needs a GPU. They ran on an A100 through Modal on 14 November
-2026. The results are in `results/2026-11-14-gpu.md`.
+2026, and on a T4, an H100 and an A100 with the autotuner's disk cache on 17
+November. The results are in `results/2026-11-14-gpu.md` and
+`results/2026-11-17-gpu.md`. `python tools/gpu_compare.py` compares the runs.
 
 The kernels they execute are model-generated code from a public corpus. Run
 them in a container or a batch job, not in a session that holds credentials.
@@ -64,10 +66,10 @@ came from elsewhere in the worker.
 
 ## Launchers
 
-1. **Modal:** `modal run gpu/modal_app.py` runs all three parts, one GPU container per kernel, and writes to `results/raw/`. Set `CBU_GPU=T4` or another type to compare GPUs.
+1. **Modal:** `modal run gpu/modal_app.py` runs all three parts, one GPU container per kernel, at most 9 at a time plus one for the minimal demonstration, and writes to `results/raw/<gpu>/`. Set `CBU_GPU=T4` or another type to compare GPUs. Add `--cache` to run every process with `TRITON_CACHE_AUTOTUNING=1`, which writes to `results/raw/<gpu>-cache/`. Run one launch at a time, since each launch uses up to 10 GPUs, and keep the local client connected, because Modal stops the app when it disconnects.
 2. **Roar:** fill in the account and partition in `gpu/roar.sbatch`, do the setup on a login node as its header describes, then `sbatch gpu/roar.sbatch`.
 
-The Modal launcher has run on an A100. The Roar launcher has not been run. Running on two GPU types is useful, because the winning autotune config can differ between them.
+The Modal launcher has run on a T4, an A100 and an H100. The Roar launcher has not been run. The winning autotune config, and so which kernels leak, differs between the three GPUs.
 
 ## Optional: NVIDIA Compute Sanitizer
 
