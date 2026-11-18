@@ -7,5 +7,10 @@ ext/
 .pytest_cache/
 .DS_Store
 /tmp/
-results/raw/
+results/raw/*
+!results/raw/gpu_*.json
+!results/raw/t4/
+!results/raw/t4-smoke/
+!results/raw/h100/
+!results/raw/a100-cache/
 pilot_summary.json

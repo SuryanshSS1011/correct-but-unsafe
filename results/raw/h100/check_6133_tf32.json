@@ -1,0 +1,66 @@
+{
+ "device": "NVIDIA H100 80GB HBM3",
+ "cudnn_tf32_default": true,
+ "trials": [
+  {
+   "cudnn_tf32": true,
+   "mismatched": 22,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": 0.0002369726773535641,
+   "ref_wrong_vs_fp64": 22,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 0.0009615548999244439,
+   "unwritten_nan": 0
+  },
+  {
+   "cudnn_tf32": true,
+   "mismatched": 16,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": 0.00033983407358378903,
+   "ref_wrong_vs_fp64": 16,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 0.00104670721336797,
+   "unwritten_nan": 0
+  },
+  {
+   "cudnn_tf32": true,
+   "mismatched": 19,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": 0.0004801885670565609,
+   "ref_wrong_vs_fp64": 19,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 0.0009753136548107944,
+   "unwritten_nan": 0
+  },
+  {
+   "cudnn_tf32": false,
+   "mismatched": 0,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": null,
+   "ref_wrong_vs_fp64": 0,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 9.060472341282377e-07,
+   "unwritten_nan": 0
+  },
+  {
+   "cudnn_tf32": false,
+   "mismatched": 0,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": null,
+   "ref_wrong_vs_fp64": 0,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 8.452150777049638e-07,
+   "unwritten_nan": 0
+  },
+  {
+   "cudnn_tf32": false,
+   "mismatched": 0,
+   "elements": 258048,
+   "max_abs_pre_at_mismatch": null,
+   "ref_wrong_vs_fp64": 0,
+   "cand_wrong_vs_fp64": 0,
+   "ref_pre_max_err_vs_fp64": 1.0236627474569104e-06,
+   "unwritten_nan": 0
+  }
+ ]
+}

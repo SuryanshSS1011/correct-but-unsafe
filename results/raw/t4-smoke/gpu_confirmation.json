@@ -1,0 +1,398 @@
+{
+ "gpu": "T4",
+ "kernels": [
+  {
+   "id": "984_r2",
+   "runs": [
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "trials": [
+      {
+       "launches": 565,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      }
+     ],
+     "autotuned": [
+      {
+       "kernel": "_hardshrink_relu_forward_kernel",
+       "n_configs": 5,
+       "winner_index": 3,
+       "winner": "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None",
+       "timings": {
+        "BLOCK_SIZE: 256, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.0057119999546557665,
+         0.004927999805659056,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 512, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.005311999935656786,
+         0.004608000162988901,
+         0.0058559998869895935
+        ],
+        "BLOCK_SIZE: 1024, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004095999989658594,
+         0.0037440001033246517,
+         0.00559999980032444
+        ],
+        "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.003903999924659729,
+         0.0036800000816583633,
+         0.004095999989658594
+        ],
+        "BLOCK_SIZE: 4096, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.003967999946326017,
+         0.0038079998921602964,
+         0.004095999989658594
+        ]
+       }
+      },
+      {
+       "kernel": "_hardshrink_relu_backward_kernel",
+       "n_configs": 5,
+       "winner_index": null,
+       "winner": "None",
+       "timings": null
+      }
+     ],
+     "mode": "train",
+     "poison": true,
+     "repeat": 0
+    },
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "trials": [
+      {
+       "launches": 565,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      }
+     ],
+     "autotuned": [
+      {
+       "kernel": "_hardshrink_relu_forward_kernel",
+       "n_configs": 5,
+       "winner_index": 3,
+       "winner": "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None",
+       "timings": {
+        "BLOCK_SIZE: 256, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.005824000108987093,
+         0.005081600043922663,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 512, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.005135999992489815,
+         0.004544000141322613,
+         0.0058559998869895935
+        ],
+        "BLOCK_SIZE: 1024, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.005311999935656786,
+         0.004608000162988901,
+         0.005888000130653381
+        ],
+        "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004031999967992306,
+         0.003776000114157796,
+         0.004095999989658594
+        ],
+        "BLOCK_SIZE: 4096, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004143999889492989,
+         0.004095999989658594,
+         0.004255999810993671
+        ]
+       }
+      },
+      {
+       "kernel": "_hardshrink_relu_backward_kernel",
+       "n_configs": 5,
+       "winner_index": null,
+       "winner": "None",
+       "timings": null
+      }
+     ],
+     "mode": "train",
+     "poison": false,
+     "repeat": 0
+    },
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "leak_trials": [
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      },
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      },
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      }
+     ],
+     "mode": "train",
+     "leak": true,
+     "repeat": 0
+    },
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "trials": [
+      {
+       "launches": 566,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true,
+       "elements": 8192,
+       "unwritten": 0,
+       "nan": 0
+      }
+     ],
+     "autotuned": [
+      {
+       "kernel": "_hardshrink_relu_forward_kernel",
+       "n_configs": 5,
+       "winner_index": 4,
+       "winner": "BLOCK_SIZE: 4096, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None",
+       "timings": {
+        "BLOCK_SIZE: 256, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.005791999865323305,
+         0.005632000043988228,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 512, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.00598399993032217,
+         0.004736000206321478,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 1024, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004031999967992306,
+         0.0038399999029934406,
+         0.004095999989658594
+        ],
+        "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004080000100657344,
+         0.003903999924659729,
+         0.004095999989658594
+        ],
+        "BLOCK_SIZE: 4096, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.003936000168323517,
+         0.003776000114157796,
+         0.004095999989658594
+        ]
+       }
+      },
+      {
+       "kernel": "_hardshrink_relu_backward_kernel",
+       "n_configs": 5,
+       "winner_index": null,
+       "winner": "None",
+       "timings": null
+      }
+     ],
+     "mode": "eval",
+     "poison": true,
+     "repeat": 0
+    },
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "trials": [
+      {
+       "launches": 565,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      },
+      {
+       "launches": 1,
+       "shape_match": true,
+       "allclose": true
+      }
+     ],
+     "autotuned": [
+      {
+       "kernel": "_hardshrink_relu_forward_kernel",
+       "n_configs": 5,
+       "winner_index": 3,
+       "winner": "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None",
+       "timings": {
+        "BLOCK_SIZE: 256, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.006016000173985958,
+         0.005824000108987093,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 512, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.00596800004132092,
+         0.005824000108987093,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 1024, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004095999989658594,
+         0.0037120000924915075,
+         0.006144000217318535
+        ],
+        "BLOCK_SIZE: 2048, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.003967999946326017,
+         0.0038399999029934406,
+         0.004095999989658594
+        ],
+        "BLOCK_SIZE: 4096, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+         0.004031999967992306,
+         0.003871999913826585,
+         0.004095999989658594
+        ]
+       }
+      },
+      {
+       "kernel": "_hardshrink_relu_backward_kernel",
+       "n_configs": 5,
+       "winner_index": null,
+       "winner": "None",
+       "timings": null
+      }
+     ],
+     "mode": "eval",
+     "poison": false,
+     "repeat": 0
+    },
+    {
+     "status": "ok",
+     "exception": null,
+     "device": "Tesla T4",
+     "leak_trials": [
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      },
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      },
+      {
+       "leaked": 0,
+       "elements": 8192,
+       "allclose": true
+      }
+     ],
+     "mode": "eval",
+     "leak": true,
+     "repeat": 0
+    }
+   ]
+  }
+ ]
+}
