@@ -71,6 +71,16 @@ came from elsewhere in the worker.
 
 The Modal launcher has run on a T4, an A100 and an H100. The Roar launcher has not been run. The winning autotune config, and so which kernels leak, differs between the three GPUs.
 
+## Compute Sanitizer initcheck, with and without the caching allocator
+
+```
+modal run gpu/modal_initcheck.py
+```
+
+`gpu/initcheck.py` runs KernelGYM's five plain trials under `compute-sanitizer --tool initcheck`, once with PyTorch's caching allocator and once with `PYTORCH_NO_CUDA_MEMORY_CACHING=1`. A warm-up process with the poison fill tunes each autotuned kernel and writes the winner to a private Triton cache, so both sanitizer runs use the same config and skip tuning. The launcher uses a CUDA devel image, uploads this working tree's `cbu/` and `gpu/` instead of cloning the repository, and writes to `results/raw/<gpu>-initcheck/`.
+
+**What it decides:** whether the standard tool for uninitialized reads sees the unwritten output under the default allocator.
+
 ## Optional: NVIDIA Compute Sanitizer
 
 `compute-sanitizer --tool memcheck python -m cbu.target ...` gives an

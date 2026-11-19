@@ -21,7 +21,7 @@ BLOCKS = (256, 512, 1024, 2048)
 SIZES = (8192, 1 << 16, 1 << 20, 1 << 24)
 
 
-def child() -> dict:
+def child(sizes: tuple[int, ...] = SIZES) -> dict:
     import torch
     import triton
     import triton.language as tl
@@ -38,7 +38,7 @@ def child() -> dict:
         add_one[grid](x, y, x.numel())
 
     out = {"device": torch.cuda.get_device_name(0), "torch": torch.__version__, "triton": triton.__version__, "sizes": []}
-    for n in SIZES:
+    for n in sizes:
         rec: dict = {"n": n, "unwritten_marked": [], "allclose_plain": []}
         # Part A. The output is pre-filled with NaN, so every unwritten element is visible.
         for _ in range(4):
@@ -69,13 +69,15 @@ def main() -> int:
     ap.add_argument("--repeats", type=int, default=5)
     ap.add_argument("--out", default="gpu_minimal_repro.json")
     ap.add_argument("--child", action="store_true")
+    ap.add_argument("--sizes", default="", help="comma-separated tensor sizes, default all four")
     a = ap.parse_args()
     if a.child:
-        print("REPRO_JSON:" + json.dumps(child()))
+        print("REPRO_JSON:" + json.dumps(child(tuple(int(x) for x in a.sizes.split(",")) if a.sizes else SIZES)))
         return 0
     runs = []
     for i in range(a.repeats):
-        p = subprocess.run([sys.executable, __file__, "--child"], capture_output=True, text=True)
+        p = subprocess.run([sys.executable, __file__, "--child", *(["--sizes", a.sizes] if a.sizes else [])],
+                           check=False, capture_output=True, text=True)
         line = next((ln for ln in p.stdout.splitlines() if ln.startswith("REPRO_JSON:")), None)
         if line is None:
             print(f"repeat {i} failed:\n{p.stderr[-1500:]}")
