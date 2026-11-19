@@ -23,6 +23,9 @@ on:
       budget:
         description: "seconds per kernel"
         default: "3000"
+      only:
+        description: "comma-separated shard indices to run, empty for all"
+        default: ""
 
 permissions:
   contents: read
@@ -39,7 +42,11 @@ jobs:
       - name: Skip unused shards
         id: gate
         run: |
-          if [ "${{ matrix.shard }}" -lt "${{ inputs.shards || '8' }}" ]; then echo "run=1" >> "$GITHUB_OUTPUT"; else echo "run=0" >> "$GITHUB_OUTPUT"; fi
+          run=0
+          if [ "${{ matrix.shard }}" -lt "${{ inputs.shards || '8' }}" ]; then run=1; fi
+          ONLY="${{ inputs.only }}"
+          if [ -n "$ONLY" ] && ! echo ",$ONLY," | grep -q ",${{ matrix.shard }},"; then run=0; fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         if: steps.gate.outputs.run == '1'
       - uses: actions/setup-python@v5
@@ -67,7 +74,12 @@ jobs:
           python tools/dump_kernels.py --kernels "$KERNELS" --out data/recheck.jsonl
       - name: Recheck shard ${{ matrix.shard }}
         if: steps.gate.outputs.run == '1'
+        shell: bash
         run: |
+          # Cap virtual memory in light mode so one runaway kernel cannot take
+          # the runner down. ASan reserves a large shadow region, so the cap is
+          # skipped when ASan runs.
+          if [ "${{ inputs.light }}" = "true" ]; then ulimit -v 11000000; fi
           timeout --signal=INT 330m python pilot/drkernel/recheck.py --data data/recheck.jsonl --shard ${{ matrix.shard }}/${{ inputs.shards || '8' }} \
             --modes "${{ inputs.modes || 'eval,train' }}" --budget "${{ inputs.budget || '3000' }}" ${{ inputs.light == 'true' && '--light' || '' }} \
             --out results/raw/recheck_shard${{ matrix.shard }}.json || echo "shard stopped early with status $?"
