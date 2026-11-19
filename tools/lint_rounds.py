@@ -46,7 +46,7 @@ ERRORS = {
 
 def features(code: str) -> dict:
     f: dict = {"parse_ok": True, "autotune": False, "n_configs": 0, "tunables": {}, "launch_static": 0, "launch_callable": 0,
-               "L1": False, "grid_src": None, "empty": 0, "training_guard": False, "is_cuda_guard": False, "boolop_in_kernel": False}
+               "L1": False, "L1r": False, "grid_src": None, "empty": 0, "training_guard": False, "is_cuda_guard": False, "boolop_in_kernel": False}
     if not code:
         f["parse_ok"] = False
         return f
@@ -59,7 +59,9 @@ def features(code: str) -> dict:
         f["parse_ok"] = False
         return f
     autotuned: dict = {}
+    autotuned_r: dict = {}
     kernels: set = set()
+    module_names = {n.targets[0].id: n.value for n in tree.body if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name)}
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef):
             continue
@@ -71,14 +73,16 @@ def features(code: str) -> dict:
         for dec in node.decorator_list:
             if "autotune" not in ast.unparse(dec):
                 continue
-            cfgs = [c for c in ast.walk(dec) if isinstance(c, ast.Call) and ast.unparse(c.func).endswith("Config")]
-            tun: dict = {}
-            for c in cfgs:
-                if c.args and isinstance(c.args[0], ast.Dict):
-                    for k, v in zip(c.args[0].keys, c.args[0].values):
-                        if isinstance(k, ast.Constant):
-                            tun.setdefault(str(k.value), set()).add(ast.unparse(v))
-            autotuned[node.name] = {"n": len(cfgs), "tun": {k: sorted(v) for k, v in tun.items()}}
+            cfgs = _configs_in(dec)
+            autotuned[node.name] = {"n": len(cfgs), "tun": _tunables(cfgs)}
+            # L1r also follows a config list held in a module-level name, as in
+            # @triton.autotune(configs=_CONFIGS, ...), which L1 does not see.
+            refs = [kw.value for kw in getattr(dec, "keywords", []) if kw.arg == "configs"] + list(getattr(dec, "args", [])[:1])
+            rcfgs = list(cfgs)
+            for r in refs:
+                if isinstance(r, ast.Name) and r.id in module_names:
+                    rcfgs += _configs_in(module_names[r.id])
+            autotuned_r[node.name] = {"n": len(rcfgs), "tun": _tunables(rcfgs)}
             kernels.add(node.name)
     if autotuned:
         f["autotune"] = True
@@ -102,7 +106,24 @@ def features(code: str) -> dict:
                 if shape_tun:
                     f["L1"] = True
                     f["grid_src"] = ast.unparse(g)[:120]
+                shape_tun_r = {k: v for k, v in autotuned_r[name]["tun"].items() if k not in NON_SHAPE and len(v) > 1}
+                if shape_tun_r:
+                    f["L1r"] = True
     return f
+
+
+def _configs_in(node) -> list:
+    return [c for c in ast.walk(node) if isinstance(c, ast.Call) and ast.unparse(c.func).endswith("Config")]
+
+
+def _tunables(cfgs: list) -> dict:
+    tun: dict = {}
+    for c in cfgs:
+        if c.args and isinstance(c.args[0], ast.Dict):
+            for k, v in zip(c.args[0].keys, c.args[0].values):
+                if isinstance(k, ast.Constant):
+                    tun.setdefault(str(k.value), set()).add(ast.unparse(v))
+    return {k: sorted(v) for k, v in tun.items()}
 
 
 def wilson(k: int, n: int) -> str:
@@ -237,6 +258,11 @@ def main() -> int:
     S["l1_best_ids"] = l1_best
     S["l1_hit"] = sorted(hit)
     S["grid_examples"] = [r["grid_src"] for r in best if r["L1"]][:15]
+    # L1r: L1 plus config lists held in module-level names. Reported beside L1, which the paper's numbers use.
+    S["L1r_rounds"] = sum(1 for r in rows if r.get("L1r"))
+    S["L1r_best"] = sum(1 for r in best if r.get("L1r"))
+    S["L1r_only_best_ids"] = sorted(f"{r['uuid']}_r{r['round']}" for r in best if r.get("L1r") and not r["L1"])
+    L.append(f"- L1r, which also follows config lists held in module-level names, marks {S['L1r_rounds']} rounds and {S['L1r_best']} accepted best rounds, against {sum(1 for r in rows if r['L1'])} and {len(l1_best)} for L1. Census uninitialized-output kernels marked only by L1r: {sorted(k for k in S['L1r_only_best_ids'] if k in un)}")
     # every accepted round marked by L1, for a targeted dynamic recheck
     S["l1_accepted_rounds"] = sorted({f"{r['uuid']}:{r['round']}" for r in fb_rows if r["accepted"] and r["L1"]})
     S["l1_rejected_1of5"] = sorted({f"{r['uuid']}:{r['round']}" for r in fb_rows if r["L1"] and r["correct"] is False and r["trials"] == [1, 5]})[:400]
