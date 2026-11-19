@@ -13,4 +13,5 @@ results/raw/*
 !results/raw/t4-smoke/
 !results/raw/h100/
 !results/raw/a100-cache/
+!results/raw/a100-initcheck/
 pilot_summary.json

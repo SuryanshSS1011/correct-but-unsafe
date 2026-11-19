@@ -1,0 +1,131 @@
+{
+ "gpu": "A100",
+ "sanitizer": [
+  "Version 2026.3.0.0 (build 38855100) (public-release)"
+ ],
+ "kernels": [
+  {
+   "id": "minimal_repro",
+   "caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 0,
+    "printed_by_kernel": {},
+    "sizes": [
+     {
+      "n": 8192,
+      "winner_block": 512,
+      "unwritten_marked": [
+       0,
+       4096,
+       4096,
+       4096
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 65536,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       49152,
+       49152,
+       49152
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 1048576,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       786432,
+       786432,
+       786432
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    ]
+   },
+   "no_caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 3087360,
+    "printed_by_kernel": {
+     "void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, bool, at::native::<unname": 200
+    },
+    "sizes": [
+     {
+      "n": 8192,
+      "winner_block": 512,
+      "unwritten_marked": [
+       0,
+       4096,
+       4096,
+       4096
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 65536,
+      "winner_block": 512,
+      "unwritten_marked": [
+       0,
+       32768,
+       32768,
+       32768
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 1048576,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       786432,
+       786432,
+       786432
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

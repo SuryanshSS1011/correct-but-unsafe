@@ -1,0 +1,97 @@
+{
+ "gpu": "A100",
+ "sanitizer": [
+  "Version 2026.3.0.0 (build 38855100) (public-release)"
+ ],
+ "kernels": [
+  {
+   "id": "minimal_repro",
+   "caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 0,
+    "printed_by_kernel": {},
+    "sizes": [
+     {
+      "n": 8192,
+      "winner_block": 512,
+      "unwritten_marked": [
+       0,
+       4096,
+       4096,
+       4096
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 65536,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       49152,
+       49152,
+       49152
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 1048576,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       786432,
+       786432,
+       786432
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     {
+      "n": 16777216,
+      "winner_block": 256,
+      "unwritten_marked": [
+       0,
+       12582912,
+       12582912,
+       12582912
+      ],
+      "allclose_plain": [
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    ]
+   },
+   "no_caching": {
+    "returncode": null,
+    "timeout": true,
+    "errors": null,
+    "printed_by_kernel": {
+     "void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, bool, at::native::<unname": 200
+    },
+    "sizes": [],
+    "tail": "iable_allclose(_object*, _object*, _object*) [0x60798a] in libtorch_python.so\n=========         Host Frame: cfunction_call in methodobject.c:537 [0x396f01] in libpython3.12.so.1.0\n=========         Host Frame: _PyEval_EvalFrameDefault in bytecodes.c:2706 [0x3f00ed] in libpython3.12.so.1.0\n=========         Host Frame: PyEval_EvalCode in ceval.c:578 [0x4ec30a] in libpython3.12.so.1.0\n=========         Host Frame: run_mod.llvm.16864811076475348796 in pythonrun.c:1712 [0x52aaa6] in libpython3.12.so.1.0\n=========         Host Frame: pyrun_file in pythonrun.c:1612 [0x2904ce] in libpython3.12.so.1.0\n=========         Host Frame: _PyRun_SimpleFileObject in pythonrun.c:433 [0x28fa29] in libpython3.12.so.1.0\n=========         Host Frame: _PyRun_AnyFileObject in pythonrun.c:78 [0x28f705] in libpython3.12.so.1.0\n=========         Host Frame: pymain_run_file_obj in main.c:360 [0x29ae53] in libpython3.12.so.1.0\n=========         Host Frame: pymain_run_file in main.c:379 [0x29abe1] in libpython3.12.so.1.0\n=========         Host Frame: Py_RunMain in main.c:709 [0x53f978] in libpython3.12.so.1.0\n=========         Host Frame: Py_BytesMain in main.c:763 [0x29a7d6] in libpython3.12.so.1.0\n=========         Host Frame:  [0x2a1c9] in libc.so.6\n=========         Host Frame: __libc_start_main [0x2a28a] in libc.so.6\n=========         Host Frame: _start [0x2010a8] in python\n=========         Host Frame: child in minimal_repro.py:62\n=========         Host Frame: main in minimal_repro.py:74\n========= \n"
+   }
+  }
+ ]
+}

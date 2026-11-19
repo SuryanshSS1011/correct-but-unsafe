@@ -34,6 +34,7 @@ source reading only. Grade C means inference.
 | 16 | The defect appears in a second corpus, and the lint selects it there too. | A dynamic audit of Makora found a partial write in 3 of 230 uniformly sampled programs that ran, which is 1.3%, and in 28 of 100 lint-marked programs that ran, which is 28.0% with an interval of 20.1% to 37.5%. The enrichment is about 20 times, the same direction as in Dr. Kernel. | B |
 | 17 | Whether a kernel leaks depends on the GPU type. | With the same code, inputs and software, 9 flagged kernels never left an element unwritten in 12 fresh processes on a T4 and did on an A100 or an H100. Two others leak only on the T4. The autotune winner differs between the GPUs. The out-of-bounds read of `7350_r1` faults on the A100 and the H100 and passes every trial on the T4. See `results/2026-11-17-gpu.md`. | A |
 | 18 | The autotuner's disk cache removes the covered first call. | With `TRITON_CACHE_AUTOTUNING=1` on an A100, all 273 later processes loaded the cached winner without tuning. Plain runs that passed only the first trial fell from 46 to 0, and runs that passed no trial rose from 6 to 60. After a restart, the first call of a deployed kernel is already partial. | A |
+| 19 | Compute Sanitizer's initcheck can miss the defect under PyTorch's default allocator. | On an A100, `2118_r3` and `5239_r2` left 3,840 and 3,686,400 output elements unwritten on every call, passed every plain trial and drew no initcheck error with the caching allocator. With `PYTORCH_NO_CUDA_MEMORY_CACHING=1` initcheck reported 17,280 and 13,824,000 errors in the harness's comparison. For three other kernels it reported errors in both settings, and the controls drew none. See `results/2026-11-19-initcheck.md`. | A |
 
 ## 2. What changed in the reading of the results
 
@@ -76,7 +77,7 @@ On a T4, an A100 and an H100, outcomes 1 and 3 occurred. The mechanism is stated
 3. Triton: a warning when an autotuned kernel is launched with a grid that is not callable.
 4. KernelGYM: run each autotune config separately and fill fresh allocations with a pattern.
 
-**D6. The mitigation is part of the contribution.** Two checks would have rejected all 34 census kernels. The poison fill with one run per autotune config catches the 29 partial writes, and the bounds oracle catches the 5 out-of-bounds reads. Both run on CPU. Because the first check runs every config, it does not depend on which config wins on a given GPU, and claim 17 shows that this varies. A check on one CI GPU type does not have that property.
+**D6. The mitigation is part of the contribution.** Two checks would have rejected all 34 census kernels. The poison fill with one run per autotune config catches the 29 partial writes, and the bounds oracle catches the 5 out-of-bounds reads. Both run on CPU. Because the first check runs every config, it does not depend on which config wins on a given GPU, and claim 17 shows that this varies. A check on one CI GPU type does not have that property. Compute Sanitizer's initcheck is not a substitute under the default allocator, which hands the output a recycled block, as claim 19 records.
 
 **D7. Scope of claims.** Every number is stated for the audited inputs, which are the benchmark's own shape and up to four autotune configs in the census. The paper does not claim the absence of defects elsewhere.
 

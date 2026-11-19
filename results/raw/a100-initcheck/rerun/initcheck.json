@@ -1,0 +1,382 @@
+{
+ "gpu": "A100",
+ "sanitizer": [
+  "Version 2026.3.0.0 (build 38855100) (public-release)"
+ ],
+ "kernels": [
+  {
+   "id": "5239_r2",
+   "warmup_poison": {
+    "returncode": 0,
+    "status": "ok",
+    "allclose": [
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "unwritten": [
+     0,
+     3686400,
+     3686400,
+     3686400,
+     3686400
+    ],
+    "first_call_launches": 4181,
+    "winners": [
+     [
+      "_sin_persistent_kernel",
+      0
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_SIZE: 1024, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.016383999958634377,
+       0.015359999611973763,
+       0.016383999958634377
+      ],
+      "BLOCK_SIZE: 2048, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.021503999829292297,
+       0.020479999482631683,
+       0.021503999829292297
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 1, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03788800165057182,
+       0.03686400130391121,
+       0.03788800165057182
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 2, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03993599861860275,
+       0.03993599861860275,
+       0.04095999896526337
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 1, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.04403200000524521,
+       0.043007999658584595,
+       0.04403200000524521
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 2, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.058368001133203506,
+       0.05734400078654289,
+       0.05939200147986412
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 4, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.05427199974656105,
+       0.05427199974656105,
+       0.055296000093221664
+      ]
+     }
+    ]
+   },
+   "caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 0,
+    "printed_by_kernel": {},
+    "status": "ok",
+    "allclose": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "unwritten": [
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "first_call_launches": 1,
+    "winners": [
+     [
+      "_sin_persistent_kernel",
+      0
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_SIZE: 1024, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.016383999958634377,
+       0.015359999611973763,
+       0.016383999958634377
+      ],
+      "BLOCK_SIZE: 2048, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.021503999829292297,
+       0.020479999482631683,
+       0.021503999829292297
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 1, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03788800165057182,
+       0.03686400130391121,
+       0.03788800165057182
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 2, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03993599861860275,
+       0.03993599861860275,
+       0.04095999896526337
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 1, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.04403200000524521,
+       0.043007999658584595,
+       0.04403200000524521
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 2, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.058368001133203506,
+       0.05734400078654289,
+       0.05939200147986412
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 4, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.05427199974656105,
+       0.05427199974656105,
+       0.055296000093221664
+      ]
+     }
+    ]
+   },
+   "no_caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 13824000,
+    "printed_by_kernel": {
+     "void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, bool, at::native::<unname": 200
+    },
+    "status": "ok",
+    "allclose": [
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "unwritten": [
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "first_call_launches": 1,
+    "winners": [
+     [
+      "_sin_persistent_kernel",
+      0
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_SIZE: 1024, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.016383999958634377,
+       0.015359999611973763,
+       0.016383999958634377
+      ],
+      "BLOCK_SIZE: 2048, ITERS: 1, num_warps: 4, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.021503999829292297,
+       0.020479999482631683,
+       0.021503999829292297
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 1, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03788800165057182,
+       0.03686400130391121,
+       0.03788800165057182
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 2, num_warps: 8, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.03993599861860275,
+       0.03993599861860275,
+       0.04095999896526337
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 1, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.04403200000524521,
+       0.043007999658584595,
+       0.04403200000524521
+      ],
+      "BLOCK_SIZE: 8192, ITERS: 2, num_warps: 16, num_ctas: 1, num_stages: 2, maxnreg: None, ir_override: None": [
+       0.058368001133203506,
+       0.05734400078654289,
+       0.05939200147986412
+      ],
+      "BLOCK_SIZE: 4096, ITERS: 4, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.05427199974656105,
+       0.05427199974656105,
+       0.055296000093221664
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "7962_r1",
+   "warmup_poison": {
+    "returncode": 0,
+    "status": "ok",
+    "allclose": [
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "unwritten": [
+     55104,
+     55104,
+     55104,
+     55104,
+     55104
+    ],
+    "first_call_launches": 3032,
+    "winners": [
+     [
+      "unfold_kernel",
+      1
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_K: 32, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.025599999353289604,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03379200026392937,
+       0.03379200026392937,
+       0.03379200026392937
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03686400130391121,
+       0.035840000957250595,
+       0.03686400130391121
+      ]
+     }
+    ]
+   },
+   "caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 364992,
+    "printed_by_kernel": {},
+    "status": "ok",
+    "allclose": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "unwritten": [
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "first_call_launches": 1,
+    "winners": [
+     [
+      "unfold_kernel",
+      1
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_K: 32, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.025599999353289604,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03379200026392937,
+       0.03379200026392937,
+       0.03379200026392937
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03686400130391121,
+       0.035840000957250595,
+       0.03686400130391121
+      ]
+     }
+    ]
+   },
+   "no_caching": {
+    "returncode": 0,
+    "timeout": false,
+    "errors": 1394880,
+    "printed_by_kernel": {},
+    "status": "ok",
+    "allclose": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "unwritten": [
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "first_call_launches": 1,
+    "winners": [
+     [
+      "unfold_kernel",
+      1
+     ]
+    ],
+    "timings": [
+     {
+      "BLOCK_K: 32, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.025599999353289604,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 64, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.026623999699950218,
+       0.025599999353289604,
+       0.026623999699950218
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03379200026392937,
+       0.03379200026392937,
+       0.03379200026392937
+      ],
+      "BLOCK_K: 128, BLOCK_POS: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None, ir_override: None": [
+       0.03686400130391121,
+       0.035840000957250595,
+       0.03686400130391121
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}
