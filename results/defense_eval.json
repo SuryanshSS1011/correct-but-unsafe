@@ -1,0 +1,750 @@
+{
+ "defects": {
+  "1586_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "160_r2": {
+   "kind": "oob",
+   "lint_L1": false,
+   "configs_available": 6,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    1,
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "1695_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "1797_r3": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "1915_r3": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "1918_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "2118_r3": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "2121_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "228_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 5,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    1,
+    2,
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": true
+  },
+  "2487_r3": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 19,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "256_r1": {
+   "kind": "oob",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": true,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "3008_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 3,
+   "configs_audited": [
+    0,
+    1,
+    2
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "3278_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 6,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "3828_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": true
+  },
+  "4163_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "4191_r4": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "4270_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "4314_r4": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "5239_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 7,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "5338_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "6135_r2": {
+   "kind": "oob",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": true,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "6852_r1": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "6897_r4": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "6993_r1": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "703_r1": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": true
+  },
+  "7350_r1": {
+   "kind": "oob",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": true,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "7485_r3": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 5,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": true
+  },
+  "7520_r1": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 0,
+   "configs_audited": [
+    0
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "7912_r3": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": true
+  },
+  "7962_r1": {
+   "kind": "uninit",
+   "lint_L1": false,
+   "configs_available": 5,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "825_r3": {
+   "kind": "oob",
+   "lint_L1": false,
+   "configs_available": 5,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    3
+   ],
+   "cfg0_poison": false,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "8614_r4": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  },
+  "8853_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 4,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": false,
+   "any_plain_mismatch": false
+  },
+  "984_r2": {
+   "kind": "uninit",
+   "lint_L1": true,
+   "configs_available": 5,
+   "configs_audited": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "flagged_configs": [
+    0,
+    1
+   ],
+   "cfg0_poison": true,
+   "cfg0_asan": false,
+   "cfg0_plain_mismatch": true,
+   "any_plain_mismatch": true
+  }
+ },
+ "strategies": {
+  "plain_allclose_cfg0": {
+   "hit": 20,
+   "of": 34,
+   "missed": [
+    "160_r2",
+    "228_r2",
+    "2487_r3",
+    "256_r1",
+    "3828_r2",
+    "6135_r2",
+    "6852_r1",
+    "703_r1",
+    "7485_r3",
+    "7520_r1",
+    "7912_r3",
+    "7962_r1",
+    "825_r3",
+    "8853_r2"
+   ]
+  },
+  "plain_allclose_any_cfg": {
+   "hit": 25,
+   "of": 34,
+   "missed": [
+    "160_r2",
+    "2487_r3",
+    "256_r1",
+    "6135_r2",
+    "6852_r1",
+    "7520_r1",
+    "7962_r1",
+    "825_r3",
+    "8853_r2"
+   ]
+  },
+  "poison_cfg0": {
+   "hit": 24,
+   "of": 34,
+   "missed": [
+    "160_r2",
+    "228_r2",
+    "256_r1",
+    "3828_r2",
+    "6135_r2",
+    "703_r1",
+    "7350_r1",
+    "7485_r3",
+    "7912_r3",
+    "825_r3"
+   ]
+  },
+  "poison_asan_cfg0": {
+   "hit": 27,
+   "of": 34,
+   "missed": [
+    "160_r2",
+    "228_r2",
+    "3828_r2",
+    "703_r1",
+    "7485_r3",
+    "7912_r3",
+    "825_r3"
+   ]
+  },
+  "poison_asan_per_config": {
+   "hit": 34,
+   "of": 34,
+   "missed": []
+  },
+  "uninit_poison_cfg0": {
+   "hit": 24,
+   "of": 29,
+   "missed": [
+    "228_r2",
+    "3828_r2",
+    "703_r1",
+    "7485_r3",
+    "7912_r3"
+   ]
+  },
+  "uninit_poison_per_config": {
+   "hit": 29,
+   "of": 29,
+   "missed": []
+  },
+  "uninit_lint_L1": {
+   "hit": 23,
+   "of": 29,
+   "missed": [
+    "1797_r3",
+    "2118_r3",
+    "4191_r4",
+    "6852_r1",
+    "7520_r1",
+    "7962_r1"
+   ]
+  },
+  "uninit_lint_gated_per_config": {
+   "hit": 23,
+   "of": 29,
+   "missed": [
+    "1797_r3",
+    "2118_r3",
+    "4191_r4",
+    "6852_r1",
+    "7520_r1",
+    "7962_r1"
+   ]
+  },
+  "config_dependent": {
+   "hit": 23,
+   "of": 34,
+   "missed": [
+    "1918_r2",
+    "2118_r3",
+    "256_r1",
+    "3278_r2",
+    "4191_r4",
+    "4270_r2",
+    "6135_r2",
+    "6852_r1",
+    "7350_r1",
+    "7520_r1",
+    "7962_r1"
+   ]
+  }
+ },
+ "cost": {
+  "autotuned_kernels": 1391,
+  "median_configs_audited": 4,
+  "median_cfg0_seconds": 2.62,
+  "median_per_config_seconds": 9.99,
+  "median_overhead_factor": 3.95,
+  "total_cfg0_hours": 5.99,
+  "total_per_config_hours": 12.08,
+  "lint_gated_per_config_hours": 2.81
+ },
+ "dynamic_flagged_total": 36,
+ "dynamic_flagged_true": 34,
+ "dynamic_flagged_fp_triaged": [
+  "2394_r4",
+  "4089_r4"
+ ],
+ "dynamic_flagged_other": [],
+ "lint": {
+  "marked": 304,
+  "population": 6230,
+  "marked_fraction": 0.0488,
+  "uninit_in_marked": 23,
+  "uninit_unmarked": 6,
+  "precision_uninit": 0.0757,
+  "rate_unmarked": 0.00101
+ }
+}
