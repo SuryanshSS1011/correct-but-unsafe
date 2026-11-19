@@ -1,0 +1,323 @@
+{
+ "tuned": false,
+ "runs": [
+  {
+   "scenario": "same_size",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "larger_victim",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "interleaved",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "no_caching",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": "1",
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786079,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786079
+  },
+  {
+   "scenario": "expandable",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "cross_process",
+   "role": "victim",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   }
+  },
+  {
+   "scenario": "cross_process",
+   "role": "caller",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786060,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786060
+  },
+  {
+   "scenario": "same_size",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "larger_victim",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "interleaved",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "no_caching",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": "1",
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786070,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786070
+  },
+  {
+   "scenario": "expandable",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "cross_process",
+   "role": "victim",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   }
+  },
+  {
+   "scenario": "cross_process",
+   "role": "caller",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786066,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786066
+  },
+  {
+   "scenario": "same_size",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "larger_victim",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "interleaved",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "no_caching",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": "1",
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786075,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786075
+  },
+  {
+   "scenario": "expandable",
+   "role": "both",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786432,
+   "victim_value_same_position": 786432,
+   "victim_value_any_position": 786432,
+   "zero": 0
+  },
+  {
+   "scenario": "cross_process",
+   "role": "victim",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   }
+  },
+  {
+   "scenario": "cross_process",
+   "role": "caller",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.15.0+cu132",
+   "env": {
+    "PYTORCH_NO_CUDA_MEMORY_CACHING": null,
+    "PYTORCH_CUDA_ALLOC_CONF": null
+   },
+   "n": 1048576,
+   "winner_block": 256,
+   "unwritten": 786056,
+   "victim_value_same_position": 0,
+   "victim_value_any_position": 0,
+   "zero": 786056
+  }
+ ]
+}

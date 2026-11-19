@@ -61,9 +61,19 @@ places the output, not on the kernel.
 
 **Turning off the cache alone does not make the benchmark catch it.** Without
 caching, `2118_r3`, `6852_r1` and `7962_r1` still passed every plain trial and
-`7520_r1` passed four of five. Only `5239_r2` failed all five. The driver returns recently freed pages with
-their contents. Only the poison fill or initcheck without caching detected the
-defect in every case.
+`7520_r1` passed four of five. Only `5239_r2` failed all five. The three that
+pass skip output elements whose correct value is zero: the upper triangle of
+`torch.tril` for `2118_r3`, and the padding of `F.unfold` for `6852_r1` and
+`7962_r1`. A fresh allocation without caching comes back zeroed, as the
+cross-request check in `results/2026-11-19-leak.md` also shows, so the
+unwritten elements happen to hold the right value. Under the caching allocator
+they passed as well, so the recycled block held zeros at those positions; which
+earlier tensor it came from was not established. Only the poison fill or
+initcheck without caching detected the defect in every case.
+
+An earlier version of this paragraph, and the message of the commit that added
+it, said the driver returns freed pages with their contents. The data do not
+support that, and it is withdrawn.
 
 ## 3. Limits
 

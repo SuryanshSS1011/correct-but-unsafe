@@ -14,4 +14,6 @@ results/raw/*
 !results/raw/h100/
 !results/raw/a100-cache/
 !results/raw/a100-initcheck/
+!results/raw/a100-leak/
+!results/raw/a100-leak-tuned/
 pilot_summary.json
