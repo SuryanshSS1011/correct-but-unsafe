@@ -1,0 +1,1139 @@
+{
+ "1586_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "1695_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "1915_r3": {
+  "patched": false,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "1918_r2": {
+  "patched": false,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "2121_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "228_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     3
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     3
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ],
+    [
+     "eval",
+     3
+    ],
+    [
+     "eval",
+     4
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ],
+    [
+     "eval",
+     3
+    ],
+    [
+     "eval",
+     4
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "2487_r3": {
+  "patched": false,
+  "fixed": {
+   "configs": 38,
+   "ran": 38,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     4
+    ],
+    [
+     "eval",
+     8
+    ],
+    [
+     "eval",
+     12
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     4
+    ],
+    [
+     "train",
+     8
+    ],
+    [
+     "train",
+     12
+    ]
+   ],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 38,
+   "ran": 38,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     4
+    ],
+    [
+     "eval",
+     8
+    ],
+    [
+     "eval",
+     12
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     4
+    ],
+    [
+     "train",
+     8
+    ],
+    [
+     "train",
+     12
+    ]
+   ],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "3008_r2": {
+  "patched": false,
+  "fixed": {
+   "configs": 6,
+   "ran": 6,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 6,
+   "ran": 6,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "3278_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 1,
+   "ran": 1,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": true
+  },
+  "control": {
+   "configs": 6,
+   "ran": 6,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "eval",
+     2
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "3828_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "4163_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "4270_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "4314_r4": {
+  "patched": false,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": false
+ },
+ "5239_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 14,
+   "ran": 14,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 14,
+   "ran": 14,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "5338_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "6897_r4": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "6993_r1": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "703_r1": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "7485_r3": {
+  "patched": true,
+  "fixed": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "7912_r3": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     3
+    ],
+    [
+     "train",
+     3
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "8614_r4": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "8853_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 8,
+   "ran": 8,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "train",
+     0
+    ]
+   ],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ },
+ "984_r2": {
+  "patched": true,
+  "fixed": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [],
+   "mismatch": [],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "control": {
+   "configs": 10,
+   "ran": 10,
+   "partial": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "mismatch": [
+    [
+     "eval",
+     0
+    ],
+    [
+     "eval",
+     1
+    ],
+    [
+     "train",
+     0
+    ],
+    [
+     "train",
+     1
+    ]
+   ],
+   "bounds": [],
+   "not_ok": [],
+   "skipped": false
+  },
+  "clean_after_fix": true
+ }
+}
