@@ -76,3 +76,22 @@ The Modal launcher has run on a T4, an A100 and an H100. The Roar launcher has n
 `compute-sanitizer --tool memcheck python -m cbu.target ...` gives an
 independent confirmation of the five out-of-bounds reads. It is slow and is
 not needed for the claims above.
+
+## Cross-request leak check
+
+`gpu/cross_request_leak.py` asks whether a partial write returns an earlier
+request's data. One process plays a server. Request A fills its tensors with a
+position-coded pattern and frees them, and request B then runs the fixed-grid
+add-one kernel forced to its 256 block, which is what a restarted process runs
+when the disk cache holds a small winner. The script counts how many of B's
+unwritten elements hold A's values, in six scenarios: same size, a larger
+victim, unrelated allocations in between, `PYTORCH_NO_CUDA_MEMORY_CACHING=1`,
+expandable segments, and A and B in separate processes one after the other.
+
+    modal run gpu/modal_leak.py              # one A100, writes results/raw/a100-leak/gpu_leak.json
+    modal run gpu/modal_leak.py --tuned      # let the autotuner pick the block
+    python gpu/cross_request_leak.py         # any local CUDA GPU
+
+A CPU dry run with `CBU_DEVICE=cpu CBU_N=8192 TRITON_INTERPRET=1` checks the
+script's logic only. It leaves 6,144 of 8,192 elements unwritten, as expected,
+and shows no victim data, because host memory is not the target.
