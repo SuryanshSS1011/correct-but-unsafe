@@ -26,6 +26,9 @@ on:
       only:
         description: "comma-separated shard indices to run, empty for all"
         default: ""
+      fix:
+        description: "path of a grid-fix table to apply to the dumped kernels, empty for none"
+        default: ""
 
 permissions:
   contents: read
@@ -72,6 +75,10 @@ jobs:
             KERNELS=$(python -c "import json,sys;S=json.load(open('results/lint_summary.json'));k=sys.argv[1];print(','.join(S.get(k) or S[k+'_rounds']))" "$KERNELS")
           fi
           python tools/dump_kernels.py --kernels "$KERNELS" --out data/recheck.jsonl
+          if [ -n "${{ inputs.fix }}" ]; then
+            python tools/apply_grid_fix.py data/recheck.jsonl "${{ inputs.fix }}" data/recheck_fixed.jsonl
+            mv data/recheck_fixed.jsonl data/recheck.jsonl
+          fi
       - name: Recheck shard ${{ matrix.shard }}
         if: steps.gate.outputs.run == '1'
         shell: bash

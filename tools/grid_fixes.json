@@ -1,0 +1,21 @@
+{
+ "_doc": "Per-kernel rewrite of a fixed launch grid into one that reads the autotuned block, for the 18 lint-marked census defects whose grid has the form cdiv(n, CONSTANT). Each entry is [line, old text, new text] on that line of the kernel source.",
+ "228_r2": [[122, "(N, C, _ceil_div(H, 32))", "lambda META: (N, C, _ceil_div(H, META['BLOCK_H']))"]],
+ "703_r1": [[110, "(triton.cdiv(M, 64), triton.cdiv(N, 64))", "lambda META: (triton.cdiv(M, META['BLOCK_M']), triton.cdiv(N, META['BLOCK_N']))"]],
+ "984_r2": [[86, "(triton.cdiv(n, 1024),)", "lambda META: (triton.cdiv(n, META['BLOCK_SIZE']),)"], [124, "(triton.cdiv(n, 1024),)", "lambda META: (triton.cdiv(n, META['BLOCK_SIZE']),)"]],
+ "1586_r2": [[63, "(triton.cdiv(n, 1024),)", "lambda META: (triton.cdiv(n, META['BLOCK_SIZE']),)"]],
+ "1695_r2": [[74, "(triton.cdiv(N, 256),)", "lambda META: (triton.cdiv(N, META['BLOCK_SIZE']),)"]],
+ "2121_r2": [[101, "(triton.cdiv(numel, 1024),)", "lambda META: (triton.cdiv(numel, META['BLOCK_SIZE']),)"], [109, "(triton.cdiv(M, 64), triton.cdiv(N, 128))", "lambda META: (triton.cdiv(M, META['BLOCK_M']), triton.cdiv(N, META['BLOCK_N']))"]],
+ "3278_r2": [[125, "(N * C, triton.cdiv(S, 1024))", "lambda META: (N * C, triton.cdiv(S, META['BLOCK_SIZE']))"], [145, "(N * C, triton.cdiv(S, 1024))", "lambda META: (N * C, triton.cdiv(S, META['BLOCK_SIZE']))"], [214, "(N * C, triton.cdiv(S, 1024))", "lambda META: (N * C, triton.cdiv(S, META['BLOCK_SIZE']))"]],
+ "3828_r2": [[162, "(triton.cdiv(B, 64), triton.cdiv(N, 64))", "lambda META: (triton.cdiv(B, META['BLOCK_M']), triton.cdiv(N, META['BLOCK_N']))"]],
+ "4270_r2": [[126, "(C, triton.cdiv(M, 2048))", "lambda META: (C, triton.cdiv(M, META['BLOCK_M']))"]],
+ "4163_r2": [[127, "(C, N * H, triton.cdiv(W, init_block_w))", "lambda META: (C, N * H, triton.cdiv(W, META['BLOCK_W']))"]],
+ "5239_r2": [[77, "(triton.cdiv(n_elements, div),)", "lambda META: (triton.cdiv(n_elements, META['BLOCK_SIZE'] * META['ITERS']),)"]],
+ "5338_r2": [[86, "(triton.cdiv(n, 1024),)", "lambda META: (triton.cdiv(n, META['BLOCK_SIZE']),)"]],
+ "6897_r4": [[80, "(N_out, triton.cdiv(E, 1024))", "lambda META: (N_out, triton.cdiv(E, META['BLOCK_E']))"]],
+ "6993_r1": [[79, "(M, triton.cdiv(N, 128))", "lambda META: (M, triton.cdiv(N, META['BLOCK_N']))"]],
+ "7485_r3": [[112, "(N, triton.cdiv(Cout, 8), triton.cdiv(Lo, 64))", "lambda META: (N, triton.cdiv(Cout, META['BLOCK_OC']), triton.cdiv(Lo, META['BLOCK_T']))"]],
+ "7912_r3": [[108, "(triton.cdiv(N, 1024),)", "lambda META: (triton.cdiv(N, META['BLOCK_SIZE']),)"], [146, "(triton.cdiv(N, 1024),)", "lambda META: (triton.cdiv(N, META['BLOCK_SIZE']),)"]],
+ "8614_r4": [[157, "(B, triton.cdiv(L, 128))", "lambda META: (B, triton.cdiv(L, META['BLOCK_L']))"]],
+ "8853_r2": [[93, "(triton.cdiv(n_elements, 1024),)", "lambda META: (triton.cdiv(n_elements, META['BLOCK_SIZE']),)"], [106, "(triton.cdiv(n_elements, 1024),)", "lambda META: (triton.cdiv(n_elements, META['BLOCK_SIZE']),)"]]
+}
