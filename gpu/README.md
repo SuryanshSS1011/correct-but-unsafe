@@ -105,3 +105,23 @@ expandable segments, and A and B in separate processes one after the other.
 A CPU dry run with `CBU_DEVICE=cpu CBU_N=8192 TRITON_INTERPRET=1` checks the
 script's logic only. It leaves 6,144 of 8,192 elements unwritten, as expected,
 and shows no victim data, because host memory is not the target.
+
+## Cross-request leak in vLLM
+
+`gpu/vllm_leak/` runs the leak test in vLLM 0.34. `cbu_vllm_plugin` is a vLLM
+general plugin that, when `CBU_KERNEL` is set, replaces the kernel behind
+`SiluAndMul` with a Triton kernel of the same signature. `defective` launches the
+fixed grid of the corpus kernels and `correct` is the control. `run_leak.py`
+runs one engine per process, alternates two victim prompts before the same
+request and records the request's output, and with `--record` compares its
+activation buffers between trials. `summarize.py` gives a verdict per cell.
+
+It ran on Penn State Roar Collab. Copy `gpu/vllm_leak/roar_env.sh` to
+`/storage/work/$USER/cbu-vllm/env.sh`, create the venv there with
+`uv pip install vllm==0.34.0`, then:
+
+    sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch                # 16 configurations and the recording runs
+    RECORD_ONLY=1 sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch  # the recording runs only
+
+`roar_env.sh` keeps every cache off the home directory, which has a small
+quota. The results are in `results/2026-11-19-vllm.md`.

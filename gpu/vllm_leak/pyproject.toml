@@ -1,0 +1,15 @@
+[project]
+name = "cbu-vllm-plugin"
+version = "0.1.0"
+description = "Swaps vLLM's SiluAndMul kernel for the study's fixed-grid Triton kernel when CBU_KERNEL is set"
+requires-python = ">=3.11"
+
+[project.entry-points."vllm.general_plugins"]
+cbu = "cbu_vllm_plugin:register"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["cbu_vllm_plugin"]
