@@ -17,4 +17,5 @@ results/raw/*
 !results/raw/a100-leak/
 !results/raw/a100-leak-tuned/
 !results/raw/roar-vllm/
+!results/raw/roar-vllm-followup/
 pilot_summary.json

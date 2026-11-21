@@ -1,0 +1,558 @@
+{
+ "config": {
+  "kernel": "tail",
+  "block": "256",
+  "skip": "1",
+  "no_caching": false,
+  "mode": "eager",
+  "order": "sequential",
+  "repeats": 3,
+  "record": true,
+  "alloc_conf": "",
+  "vllm": "0.34.0",
+  "torch": "2.14.0+cu130",
+  "device": "NVIDIA A100-PCIE-40GB",
+  "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "lengths": {
+   "short": 24,
+   "long": 400
+  },
+  "startup_s": 16.9
+ },
+ "summary": {
+  "short": {
+   "repeats_agree": true,
+   "depends_on_victim": false,
+   "distinct_outputs": 1
+  },
+  "long": {
+   "repeats_agree": true,
+   "depends_on_victim": false,
+   "distinct_outputs": 1
+  }
+ },
+ "differential": {
+  "short": {
+   "layer0": {
+    "same_victim": {
+     "elements": 6,
+     "differ": 0,
+     "layout_mismatch": 0
+    },
+    "different_victim": {
+     "elements": 3,
+     "differ": 0,
+     "layout_mismatch": 0
+    }
+   },
+   "prefill": {
+    "same_victim": {
+     "elements": 132,
+     "differ": 0,
+     "layout_mismatch": 0
+    },
+    "different_victim": {
+     "elements": 66,
+     "differ": 3,
+     "layout_mismatch": 0
+    }
+   }
+  },
+  "long": {
+   "layer0": {
+    "same_victim": {
+     "elements": 6,
+     "differ": 0,
+     "layout_mismatch": 0
+    },
+    "different_victim": {
+     "elements": 3,
+     "differ": 0,
+     "layout_mismatch": 0
+    }
+   },
+   "prefill": {
+    "same_victim": {
+     "elements": 132,
+     "differ": 0,
+     "layout_mismatch": 0
+    },
+    "different_victim": {
+     "elements": 66,
+     "differ": 0,
+     "layout_mismatch": 0
+    }
+   }
+  }
+ },
+ "trials": [
+  {
+   "length": "short",
+   "repeat": 0,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7844170331954956
+     ],
+     [
+      13,
+      -2.346917152404785
+     ],
+     [
+      313,
+      -3.034417152404785
+     ],
+     [
+      29871,
+      -3.159417152404785
+     ],
+     [
+      673,
+      -3.471917152404785
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "short",
+   "repeat": 0,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "short",
+   "repeat": 1,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7844170331954956
+     ],
+     [
+      13,
+      -2.346917152404785
+     ],
+     [
+      313,
+      -3.034417152404785
+     ],
+     [
+      29871,
+      -3.159417152404785
+     ],
+     [
+      673,
+      -3.471917152404785
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "short",
+   "repeat": 1,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "short",
+   "repeat": 2,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7844170331954956
+     ],
+     [
+      13,
+      -2.346917152404785
+     ],
+     [
+      313,
+      -3.034417152404785
+     ],
+     [
+      29871,
+      -3.159417152404785
+     ],
+     [
+      673,
+      -3.471917152404785
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "short",
+   "repeat": 2,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 29,
+    "bit_equal_to_victim": 1,
+    "bit_equal_shifted_baseline": 1
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 0,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 0,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 1,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 1,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 2,
+   "victim": "V1",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  },
+  {
+   "length": "long",
+   "repeat": 2,
+   "victim": "V2",
+   "token_ids": [
+    2
+   ],
+   "text": "",
+   "top_logprobs": [
+    [
+     [
+      2,
+      -0.7875766754150391
+     ],
+     [
+      13,
+      -2.350076675415039
+     ],
+     [
+      313,
+      -3.037576675415039
+     ],
+     [
+      29871,
+      -3.162576675415039
+     ],
+     [
+      673,
+      -3.475076675415039
+     ]
+    ]
+   ],
+   "record": {
+    "caller_unwritten": 44,
+    "at_victim_op_addresses": 7,
+    "bit_equal_to_victim": 0,
+    "bit_equal_shifted_baseline": 0
+   }
+  }
+ ]
+}
