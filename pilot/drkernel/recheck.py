@@ -22,7 +22,7 @@ from cbu import detect  # noqa: E402
 def slim(r: dict) -> dict:
     """Keep what the analysis needs and drop bulky fields."""
     res = r.get("result") or {}
-    out = {k: r.get(k) for k in ("flagged", "crash_signal", "timeout", "unwritten", "unwritten_fraction", "derived_nan", "pass", "launches", "wall_seconds") if k in r}
+    out = {k: r.get(k) for k in ("flagged", "crash_signal", "timeout", "unwritten", "unwritten_fraction", "geometry", "derived_nan", "pass", "launches", "wall_seconds") if k in r}
     out["status"] = res.get("status")
     out["exception"] = (str(res.get("exception"))[:160] if res.get("exception") else None)
     out["kernel_launches"] = res.get("kernel_launches")

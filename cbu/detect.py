@@ -255,6 +255,7 @@ def run_poison(spec: dict, timeout: int = 600) -> dict:
     derived_nan = max(0, int(out.get("nan", 0)) - int(base_nan or 0)) if base_nan is not None else 0
     r["unwritten"] = unwritten
     r["unwritten_fraction"] = round(out.get("unwritten", 0) / out["elements"], 6) if out.get("elements") else None
+    r["geometry"] = [t.get("geometry") for t in out.get("tensors", []) if t.get("geometry")]
     r["derived_nan"] = derived_nan
     r["reference_clean"] = bool(ref_clean)
     r["flagged"] = bool(res.get("status") == "ok" and ref_clean and (unwritten > 0 or derived_nan > 0))

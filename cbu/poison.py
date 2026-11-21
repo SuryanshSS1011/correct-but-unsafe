@@ -85,13 +85,44 @@ def count(tensors) -> dict:
         total += n
         u = 0
         pat = pats.get(t.dtype)
+        mask = None
         if pat is not None and n:
-            u = int((t.view(pat[0]) == pat[1]).sum())
+            mask = t.view(pat[0]) == pat[1]
+            u = int(mask.sum())
         if t.is_floating_point():
             nan += int(torch.isnan(t).sum())
         unwritten += u
-        per.append({"shape": list(t.shape), "dtype": str(t.dtype), "elements": n, "unwritten": u})
+        entry = {"shape": list(t.shape), "dtype": str(t.dtype), "elements": n, "unwritten": u}
+        if u:
+            entry["geometry"] = _geometry(mask)
+        per.append(entry)
     return {"elements": total, "unwritten": unwritten, "nan": nan, "tensors": per}
+
+
+def _geometry(mask) -> dict:
+    """Where the unwritten elements sit, which decides whether padding can hide them."""
+    flat = mask.reshape(-1)
+    n, u = flat.numel(), int(flat.sum())
+    idx = flat.nonzero().reshape(-1)
+    first = int(idx[0])
+    g = {"first": first, "suffix": bool(u == n - first)}
+    if mask.dim() >= 2 and mask.shape[-1] > 0:
+        rows = mask.reshape(-1, mask.shape[-1])
+        touched = rows.any(dim=1)
+        g["rows"] = int(rows.shape[0])
+        g["rows_touched"] = int(touched.sum())
+        g["cols_touched"] = int(rows.any(dim=0).sum())
+        t_rows = rows[touched]
+        g["same_pattern_in_touched_rows"] = bool((t_rows == t_rows[0]).all())
+    if g["suffix"]:
+        g["kind"] = "suffix"
+    elif g.get("rows") and g["rows_touched"] == g["rows"]:
+        g["kind"] = "every_row"
+    elif g.get("rows"):
+        g["kind"] = "some_rows"
+    else:
+        g["kind"] = "scattered_1d"
+    return g
 
 
 def stats() -> dict:
