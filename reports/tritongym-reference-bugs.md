@@ -1,6 +1,6 @@
 # Draft report: memory-safety bugs in TritonGym reference kernels after commit 6998be6
 
-**Status:** draft for review. Nothing has been filed upstream.
+**Status:** filed by the user as TritonGym issue 5 on 16 November 2026. No maintainer reply as of 21 November.
 
 This draft is written for the TritonGym maintainers. It covers reference
 kernels under `benchmark/data_v2/triton/` at commit `5d64634`, which already

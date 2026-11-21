@@ -111,3 +111,14 @@ Two `rowtail` cells with expandable segments, and several `defective` cells,
 were NaN from the first position. The shapes runs used one repeat, so their
 verdicts only show that the two outputs differed. The A40 `rowtail` set is
 still running and is pending in the table above.
+
+## Corrections, 21 November
+
+An independent check of this write-up against the raw data found these problems.
+
+1. **Batched cells do not test whether earlier requests matter.** `run_leak.py` sends the victim and B in one `generate` call in batched mode, so the victim runs in the same batch as B, not before it. Batching also moves the correct kernel's log-probabilities by up to 0.44 nats between trials, while the defective kernels' margin between their top two tokens is mostly 0 to 0.125 nats, so batching noise alone could change their tokens. Batched verdicts are therefore not counted as evidence of cross-request dependence.
+2. **"Varies with history" is a residual label, not a test.** It covers nondeterminism in the stale contents, different NaN positions and the first trial after engine start-up, which follows warm-up rather than a user request. Dropping each set's first repeat changes 31 non-control verdicts across all sets, several of them to "determined by victim". The evidence rests on the "determined by victim" cells and the recorded-buffer differentials, which are sound.
+3. **Trial order is fixed.** Victims alternate V1, V2, V1, V2, so the last victim is confounded with the victim two requests back and with the parity of the trial. `gpu/vllm_leak/run_infer.py` randomizes the order over ten victims.
+4. **Graph-mode `defective` trials are NaN from the second position**, so those verdicts rest on one position.
+5. The SGLang result rests on "varies" verdicts alone. No SGLang recording or differential run exists yet, so it shows that SGLang's output varies with history under the defect, not that it is a function of the last victim.
+6. Section 5's two `defective` cells without the cache are both batched, so they do not count under item 1. The `floor` and `rowtail` cells without the cache include sequential ones and stand.

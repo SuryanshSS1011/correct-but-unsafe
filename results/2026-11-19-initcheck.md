@@ -64,9 +64,11 @@ caching, `2118_r3`, `6852_r1` and `7962_r1` still passed every plain trial and
 `7520_r1` passed four of five. Only `5239_r2` failed all five. The three that
 pass skip output elements whose correct value is zero: the upper triangle of
 `torch.tril` for `2118_r3`, and the padding of `F.unfold` for `6852_r1` and
-`7962_r1`. A fresh allocation without caching comes back zeroed, as the
-cross-request check in `results/2026-11-19-leak.md` also shows, so the
-unwritten elements happen to hold the right value. Under the caching allocator
+`7962_r1`. In these runs a fresh allocation without caching came back zeroed, as in the
+cross-request check in `results/2026-11-19-leak.md`, so the unwritten elements
+happened to hold the right value. CUDA does not promise zeroing, and the vLLM
+runs without the cache found non-zero leftovers in the same process, so this
+holds for these runs and not in general. Under the caching allocator
 they passed as well, so the recycled block held zeros at those positions; which
 earlier tensor it came from was not established. Only the poison fill or
 initcheck without caching detected the defect in every case.
@@ -77,7 +79,7 @@ support that, and it is withdrawn.
 
 ## 3. Limits
 
-These are nine kernels on one GPU type, chosen to cover the controls, the
+These are ten corpus kernels and the minimal demonstration on one GPU type, chosen to cover the controls, the
 kernels without autotuning and the autotuned kernels that leak on most GPUs.
 initcheck is slow when it has many reads to record. A first pass limited each
 process to 60 minutes and lost three totals without caching. `5239_r2` and
@@ -92,3 +94,9 @@ three sizes up to 1,048,576, which took 17 minutes, in
 `results/raw/a100-initcheck/rerun-minimal/`. At the fourth size, 16,777,216,
 the first pass recorded no error under the default allocator with 12,582,912
 elements unwritten per call, and no total without caching.
+
+## 4. Corrections, 21 November
+
+1. The minimal demonstration did not load a cached winner. Its first call left nothing unwritten, so both initcheck processes tuned for themselves, and at 65,536 elements they chose different blocks, 256 with caching and 512 without. The corpus kernels did load the warm-up's winner as described.
+2. Section 3 said nine kernels. Ten corpus kernels ran, `1586_r2` and `2121_r2` included, plus the minimal demonstration.
+3. The zeroing statement in section 2 is narrowed to these runs, because the vLLM runs without the cache contradict it. `gpu/alloc_zeroing.py` measures it by allocation size.
