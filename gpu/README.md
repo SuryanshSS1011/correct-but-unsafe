@@ -108,20 +108,30 @@ and shows no victim data, because host memory is not the target.
 
 ## Cross-request leak in vLLM
 
-`gpu/vllm_leak/` runs the leak test in vLLM 0.34. `cbu_vllm_plugin` is a vLLM
-general plugin that, when `CBU_KERNEL` is set, replaces the kernel behind
-`SiluAndMul` with a Triton kernel of the same signature. `defective` launches the
-fixed grid of the corpus kernels and `correct` is the control. `run_leak.py`
-runs one engine per process, alternates two victim prompts before the same
-request and records the request's output, and with `--record` compares its
-activation buffers between trials. `summarize.py` gives a verdict per cell.
+`gpu/vllm_leak/` runs the leak test in vLLM 0.34 and SGLang 0.5.9.
+`cbu_vllm_plugin` is a vLLM general plugin that, when `CBU_KERNEL` is set,
+replaces the kernel behind `SiluAndMul` with a Triton kernel of the same
+signature. `defective` launches the fixed grid of the corpus kernels and leaves
+three quarters of the output unwritten, `floor` computes the grid with floor
+division, `tail` leaves only the last element unwritten, and `correct` is the
+control. `run_leak.py` runs one engine per process, alternates two victim
+prompts before the same request and records the request's output, and with
+`--record` compares its activation buffers between trials. `run_leak_sglang.py`
+does the same in SGLang, where `sglang_patch/sitecustomize.py` swaps the kernel
+in SGLang's spawned processes. `summarize.py` gives a verdict per cell.
 
 It ran on Penn State Roar Collab. Copy `gpu/vllm_leak/roar_env.sh` to
 `/storage/work/$USER/cbu-vllm/env.sh`, create the venv there with
-`uv pip install vllm==0.34.0`, then:
+`uv pip install vllm==0.34.0`, and for SGLang a second venv, `venv-sglang`, with
+`uv pip install sglang==0.5.9` from the PyTorch cu130 index. Then:
 
     sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch                # 16 configurations and the recording runs
-    RECORD_ONLY=1 sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch  # the recording runs only
+    SET=subtle sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch     # the floor and tail defects
+    SET=nocache sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch    # allocator cache off
+    SET=model MODEL=<hf id> sbatch --account=<allocation> gpu/vllm_leak/roar_vllm.sbatch
+    SET=model sbatch --account=<allocation> --gres=gpu:a40:1 gpu/vllm_leak/roar_vllm.sbatch
+    sbatch --account=<allocation> gpu/vllm_leak/roar_sglang.sbatch
 
 `roar_env.sh` keeps every cache off the home directory, which has a small
-quota. The results are in `results/2026-11-19-vllm.md`.
+quota. The results are in `results/2026-11-19-vllm.md` and
+`results/2026-11-20-vllm-followup.md`.

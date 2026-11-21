@@ -51,21 +51,28 @@ def compare_records(records: list[dict]) -> dict:
     victim = [r for r in records if r["phase"] == "victim"]
     caller = [r for r in records if r["phase"] == "caller" and r["kind"] == "out"]
     total = covered = equal = equal_shifted = 0
+    wrote = []
+    for v in victim:
+        mask = np.ones(len(v["data"]), dtype=bool)
+        mask[v["unwritten"]] = False
+        wrote.append(mask)
     for c in caller:
-        n, w, size = len(c["data"]), c["written"], c["itemsize"]
-        if w >= n:
+        idx = c["unwritten"]
+        if not len(idx):
             continue
-        idx = np.arange(w, n)
-        addr = c["ptr"] + idx * size
+        addr = c["ptr"] + idx * c["itemsize"]
         last = np.zeros(len(idx), dtype=np.int16)
         has = np.zeros(len(idx), dtype=bool)
-        for v in victim:
-            lo, hi = v["ptr"], v["ptr"] + v["written"] * v["itemsize"]
+        for v, mask in zip(victim, wrote):
+            lo, hi = v["ptr"], v["ptr"] + len(v["data"]) * v["itemsize"]
             sel = (addr >= lo) & (addr < hi)
             if sel.any():
-                last[sel] = v["data"][(addr[sel] - lo) // v["itemsize"]]
-                has[sel] = True
-        got = c["data"][w:]
+                rel = (addr[sel] - lo) // v["itemsize"]
+                ok = mask[rel]
+                pos = np.flatnonzero(sel)[ok]
+                last[pos] = v["data"][rel[ok]]
+                has[pos] = True
+        got = c["data"][idx]
         total += len(idx)
         covered += int(has.sum())
         equal += int((has & (got == last)).sum())
@@ -80,16 +87,33 @@ def compare_records(records: list[dict]) -> dict:
     }
 
 
+FIELDS = ("elements", "differ", "zero", "address_moved", "layout_mismatch")
+
+
 def buffer_diff(a: list, b: list) -> dict:
-    """Count elements that differ between two trials' unwritten regions, where the addresses match."""
-    total = differ = mismatched = 0
+    """Count elements that differ between two trials' unwritten regions, call by call.
+
+    Calls are matched by order. address_moved counts calls whose buffer sat at a
+    different address in the two trials, which happens without the caching
+    allocator; their contents are still compared. zero counts unwritten elements
+    that were zero in the first trial.
+    """
+    total = differ = zero = moved = mismatched = 0
     for (pa, da), (pb, db) in zip(a, b):
-        if pa != pb or len(da) != len(db):
+        if len(da) != len(db):
             mismatched += 1
             continue
+        moved += pa != pb
         total += len(da)
         differ += int((da != db).sum())
-    return {"elements": total, "differ": differ, "layout_mismatch": mismatched}
+        zero += int((da == 0).sum())
+    return {
+        "elements": total,
+        "differ": differ,
+        "zero": zero,
+        "address_moved": moved,
+        "layout_mismatch": mismatched,
+    }
 
 
 def differential(snaps: dict, repeats: int) -> dict:
@@ -113,10 +137,7 @@ def differential(snaps: dict, repeats: int) -> dict:
                 for r in range(repeats)
             ]
             res[scope] = {
-                k: {
-                    f: sum(x[f] for x in xs)
-                    for f in ("elements", "differ", "layout_mismatch")
-                }
+                k: {f: sum(x[f] for x in xs) for f in FIELDS}
                 for k, xs in (("same_victim", same), ("different_victim", cross))
             }
         out[ln] = res
@@ -130,6 +151,13 @@ def main() -> int:
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--record", action="store_true", help="eager and sequential only")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--model", default=MODEL)
+    ap.add_argument("--gpu-memory-utilization", type=float, default=0.5)
+    ap.add_argument(
+        "--chat",
+        action="store_true",
+        help="wrap B's prompt in the model's chat template; victims stay raw tokens",
+    )
     a = ap.parse_args()
     if a.record:
         if a.mode != "eager" or a.order != "sequential":
@@ -140,11 +168,11 @@ def main() -> int:
 
     t0 = time.time()
     llm = LLM(
-        model=MODEL,
+        model=a.model,
         dtype="bfloat16",
         seed=0,
         max_model_len=2048,
-        gpu_memory_utilization=0.5,
+        gpu_memory_utilization=a.gpu_memory_utilization,
         enforce_eager=a.mode == "eager",
         enable_prefix_caching=False,
         compilation_config={"custom_ops": ["+silu_and_mul"]},
@@ -155,7 +183,18 @@ def main() -> int:
         import cbu_vllm_plugin as plugin
     tok = llm.get_tokenizer()
     sp = SamplingParams(temperature=0.0, max_tokens=16, logprobs=5, seed=0)
-    caller = {"prompt_token_ids": tok(CALLER)["input_ids"]}
+
+    def ids(text: str) -> list[int]:
+        if a.chat:
+            text = tok.apply_chat_template(
+                [{"role": "user", "content": text}],
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+            return tok(text, add_special_tokens=False)["input_ids"]
+        return tok(text)["input_ids"]
+
+    caller = {"prompt_token_ids": ids(CALLER)}
     victims = {
         (name, ln): {"prompt_token_ids": tokens(tok, text, n)}
         for name, text in VICTIMS.items()
@@ -166,7 +205,7 @@ def main() -> int:
     if plugin:
         from transformers import AutoConfig
 
-        layers = AutoConfig.from_pretrained(MODEL).num_hidden_layers
+        layers = AutoConfig.from_pretrained(a.model).num_hidden_layers
     trials = []
     snaps: dict = {}
     for ln in LENGTHS:
@@ -192,7 +231,7 @@ def main() -> int:
                         if r["phase"] == "caller" and r["kind"] == "out"
                     ]
                     snaps[(ln, rep, name)] = [
-                        (r["ptr"], r["data"][r["written"] :].copy())
+                        (r["ptr"], r["data"][r["unwritten"]].copy())
                         for r in calls[:layers]
                     ]
                     plugin.RECORDING = False
@@ -234,6 +273,8 @@ def main() -> int:
         "config": {
             "kernel": os.environ.get("CBU_KERNEL", "off"),
             "block": os.environ.get("CBU_BLOCK", "256"),
+            "skip": os.environ.get("CBU_SKIP", "1"),
+            "no_caching": os.environ.get("PYTORCH_NO_CUDA_MEMORY_CACHING", "") == "1",
             "mode": a.mode,
             "order": a.order,
             "repeats": a.repeats,
@@ -242,7 +283,8 @@ def main() -> int:
             "vllm": vllm.__version__,
             "torch": torch.__version__,
             "device": torch.cuda.get_device_name(0),
-            "model": MODEL,
+            "model": a.model,
+            "chat": a.chat,
             "lengths": LENGTHS,
             "startup_s": round(startup, 1),
         },
@@ -252,7 +294,15 @@ def main() -> int:
     }
     with open(a.out, "w") as f:
         json.dump(result, f, indent=1)
-    print(json.dumps({"config": result["config"], "summary": summary, "differential": result["differential"]}))
+    print(
+        json.dumps(
+            {
+                "config": result["config"],
+                "summary": summary,
+                "differential": result["differential"],
+            }
+        )
+    )
     for t in trials:
         print(
             t["length"], t["repeat"], t["victim"], t["token_ids"][:8], t["record"] or ""
